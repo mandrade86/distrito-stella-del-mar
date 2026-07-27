@@ -3,13 +3,14 @@ import {
   createAdminSession,
   verifyAdminCredentials,
 } from "@/lib/admin-api";
-import { dbAvailable } from "@/lib/db";
+import { dbAvailable, getDbStatus } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    if (!(await dbAvailable())) {
+    const db = await getDbStatus();
+    if (!db.ok) {
       return NextResponse.json(
-        { ok: false, error: "Base de datos no disponible" },
+        { ok: false, error: db.reason },
         { status: 503 },
       );
     }

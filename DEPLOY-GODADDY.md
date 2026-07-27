@@ -41,6 +41,31 @@ Campos críticos:
 
 Los `NEXT_PUBLIC_*` se “hornean” en el **build**. Si cambias URL o env, vuelve a hacer `npm run build`.
 
+### `DATABASE_URL` en GoDaddy cPanel
+
+1. cPanel → **MySQL Databases**: cree BD + usuario y asigne **ALL PRIVILEGES**.
+2. Formato típico:
+
+```env
+DATABASE_URL="mysql://USUARIO:PASSWORD@127.0.0.1:3306/NOMBRE_BD"
+```
+
+Notas cPanel:
+
+- El usuario suele verse como `cuenta_usuario` (con guion bajo).
+- El host casi siempre es `127.0.0.1` o `localhost` (no use la IP pública del sitio).
+- Si el password tiene `@ # % &` etc., **encodeéelo en URL** (ej. `@` → `%40`).
+- En **Setup Node.js App → Environment Variables** agregue también `DATABASE_URL` (a veces el `.env` no se carga solo).
+- Tras crear la BD, en la terminal de la app:
+
+```bash
+npx prisma db push
+npx tsx prisma/seed.ts
+```
+
+3. Prueba: abra `https://su-dominio/api/health`  
+   Debe devolver `"database":"connected"`. Si no, el campo `detail` indica la causa.
+
 ---
 
 ## 2. Opción A — VPS con Docker (más simple de mantener)
