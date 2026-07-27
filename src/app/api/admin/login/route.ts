@@ -3,7 +3,7 @@ import {
   createAdminSession,
   verifyAdminCredentials,
 } from "@/lib/admin-api";
-import { dbAvailable, getDbStatus } from "@/lib/db";
+import { getDbStatus } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
