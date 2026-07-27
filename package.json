@@ -1,27 +1,54 @@
 {
-  "name": "web-temp",
+  "name": "distrito-stella-del-mar",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+    "build": "prisma generate && next build",
+    "start": "next start -H 0.0.0.0",
+    "start:standalone": "node .next/standalone/server.js",
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "deploy:prepare": "npm ci && npm run db:push && npm run build"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "framer-motion": "^12.42.2",
+    "isomorphic-dompurify": "^3.19.0",
+    "lucide-react": "^1.26.0",
+    "next": "15.5.21",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.21"
+    "react-hook-form": "^7.82.0",
+    "resend": "^6.18.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.5.21",
-    "@eslint/eslintrc": "^3"
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.1",
+    "typescript": "^5"
   }
 }

@@ -1,26 +1,243 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --navy: #082f53;
+  --deep-blue: #123e68;
+  --ocean: #168ab5;
+  --turquoise: #24b9c7;
+  --gold: #c5a15a;
+  --sand: #f4f0e8;
+  --off-white: #fafaf8;
+  --charcoal: #1b2630;
+  --muted: #667481;
+  --background: var(--off-white);
+  --foreground: var(--charcoal);
 }
 
 @theme inline {
+  --color-navy: var(--navy);
+  --color-deep-blue: var(--deep-blue);
+  --color-ocean: var(--ocean);
+  --color-turquoise: var(--turquoise);
+  --color-gold: var(--gold);
+  --color-sand: var(--sand);
+  --color-off-white: var(--off-white);
+  --color-charcoal: var(--charcoal);
+  --color-muted: var(--muted);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01" on, "kern" on;
+  letter-spacing: 0.01em;
+}
+
+h1,
+h2,
+h3,
+.font-serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--ocean) 30%, white);
+  color: var(--navy);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ocean);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.section-pad {
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+}
+
+.section-y {
+  padding-block: clamp(4.5rem, 8vw, 7rem);
+}
+
+.container-site {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+.water-nav-link {
+  position: relative;
+}
+
+.water-nav-link::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='4' viewBox='0 0 24 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 2C4 0 8 0 12 2s8 2 12 0' fill='none' stroke='%23c5a15a' stroke-width='1.4'/%3E%3C/svg%3E");
+  background-position: 0 100%;
+  background-repeat: repeat-x;
+  opacity: 0;
+  transform: scaleX(0.45);
+  transition:
+    opacity 250ms ease,
+    transform 350ms ease;
+}
+
+.water-nav-link:hover::after,
+.water-nav-link[data-active="true"]::after {
+  opacity: 1;
+  transform: scaleX(1);
+  animation: water-drift 1.6s linear infinite;
+}
+
+@keyframes water-drift {
+  to {
+    background-position-x: 24px;
+  }
+}
+
+@keyframes sea-wave-drift {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes sea-star-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.12;
+  }
+  50% {
+    transform: translateY(-10px) rotate(8deg);
+    opacity: 0.22;
+  }
+}
+
+@keyframes sea-shimmer {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.sea-wave-track {
+  animation: sea-wave-drift 18s linear infinite;
+}
+
+.sea-star-float {
+  animation: sea-star-float 9s ease-in-out infinite;
+}
+
+.sea-star-float-delayed {
+  animation: sea-star-float 11s ease-in-out infinite 1.4s;
+}
+
+.sea-shimmer-line {
+  animation: sea-shimmer 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sea-wave-track,
+  .sea-star-float,
+  .sea-star-float-delayed,
+  .sea-shimmer-line {
+    animation: none;
+  }
+}
+
+/* Contenido HTML del CMS / blog */
+.cms-html {
+  line-height: 1.7;
+  color: var(--charcoal);
+}
+
+.cms-html > * + * {
+  margin-top: 1rem;
+}
+
+.cms-html h1,
+.cms-html h2,
+.cms-html h3,
+.cms-html h4 {
+  font-family: var(--font-serif);
+  color: var(--navy);
+  line-height: 1.2;
+  margin-top: 1.75rem;
+}
+
+.cms-html h2 {
+  font-size: 1.75rem;
+}
+
+.cms-html h3 {
+  font-size: 1.35rem;
+}
+
+.cms-html a {
+  color: var(--ocean);
+  text-decoration: underline;
+}
+
+.cms-html ul,
+.cms-html ol {
+  padding-left: 1.25rem;
+}
+
+.cms-html ul {
+  list-style: disc;
+}
+
+.cms-html ol {
+  list-style: decimal;
+}
+
+.cms-html img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cms-html blockquote {
+  border-left: 3px solid var(--gold);
+  padding-left: 1rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.cms-html iframe {
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  border: 0;
 }

@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+!DEPLOY-GODADDY.md
+.env
+.env.*
+!.env.example
+docker-compose*.yml
+coverage
+.vscode
+.cursor
+agent-transcripts
+deploy-ftp.local.ps1

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Distrito Stella del Mar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="hero hero--blue" id="hero">
+      <div class="overlay" aria-hidden="true"></div>
+
+      <div
+        class="overlay-toggle"
+        role="group"
+        aria-label="Estilo de overlay de fondo"
+      >
+        <button
+          type="button"
+          class="overlay-toggle__btn overlay-toggle__btn--blue is-active"
+          data-overlay="blue"
+          aria-pressed="true"
+        >
+          Azul
+        </button>
+        <button
+          type="button"
+          class="overlay-toggle__btn overlay-toggle__btn--white"
+          data-overlay="white"
+          aria-pressed="false"
+        >
+          Blanco
+        </button>
+      </div>
+
+      <section class="content">
+        <h1 class="construction-notice">Sitio Web en Construcción</h1>
+        <h1 class="brand">
+          <img
+            src="./assets/logo.png"
+            alt="Distrito Stella del Mar"
+            class="brand-logo brand-logo--light"
+            width="350"
+          />
+          <img
+            src="./assets/logo_blue.png"
+            alt="Distrito Stella del Mar"
+            class="brand-logo brand-logo--blue"
+            width="350"
+          />
+        </h1>
+
+        <p class="tagline">
+          El nuevo corazón de Puerto Cortés, donde convergen comercio, negocios
+          y estilo de vida.
+        </p>
+
+        <div class="partners">
+          <div class="partners-logos">
+            <article class="partner-item">
+              <p class="partners-title">Proyecto de</p>
+              <img
+                src="./assets/inmobiliaria_logo.webp"
+                alt="RCJ Inmobiliaria Honduras"
+                class="partner-logo"
+              />
+            </article>
+            <span class="partners-divider" aria-hidden="true"></span>
+            <article class="partner-item">
+              <p class="partners-title">Una empresa de</p>
+              <img
+                src="./assets/rcj_logo.webp"
+                alt="RCJ Corporación"
+                class="partner-logo partner-logo--large"
+              />
+            </article>
+          </div>
+        </div>
+
+        <a class="email" href="mailto: info@distritostelladelmar.com">info@distritostelladelmar.com</a>
+
+        <nav class="social-media social--color" aria-label="Redes sociales">
+          <a
+            href="#"
+            class="social-link social-link--facebook"
+            aria-label="Facebook"
+          >
+            <img
+              src="https://cdn.simpleicons.org/facebook"
+              alt="Facebook"
+              width="24"
+              height="24"
+            />
+          </a>
+          <a
+            href="#"
+            class="social-link social-link--instagram"
+            aria-label="Instagram"
+          >
+            <img
+              src="https://cdn.simpleicons.org/instagram"
+              alt="Instagram"
+              width="24"
+              height="24"
+            />
+          </a>
+          <a href="#" class="social-link social-link--tiktok" aria-label="TikTok">
+            <img
+              src="https://cdn.simpleicons.org/tiktok"
+              alt="TikTok"
+              width="24"
+              height="24"
+            />
+          </a>
+        </nav>
+      </section>
+    </main>
+    <script>
+      (function () {
+        var hero = document.getElementById("hero");
+        var buttons = document.querySelectorAll("[data-overlay]");
+        function setMode(mode) {
+          hero.classList.remove("hero--blue", "hero--white");
+          hero.classList.add(mode === "white" ? "hero--white" : "hero--blue");
+          buttons.forEach(function (btn) {
+            var active = btn.getAttribute("data-overlay") === mode;
+            btn.classList.toggle("is-active", active);
+            btn.setAttribute("aria-pressed", active ? "true" : "false");
+          });
+        }
+        buttons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            setMode(btn.getAttribute("data-overlay"));
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

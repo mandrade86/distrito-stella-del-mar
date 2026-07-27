@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+model PageContent {
+  id         String   @id @default(cuid())
+  pageSlug   String
+  sectionKey String
+  fieldKey   String
+  value      String   @db.Text
+  updatedAt  DateTime @updatedAt
+
+  @@unique([pageSlug, sectionKey, fieldKey])
+  @@index([pageSlug])
+}
+
+/// Páginas HTML libres (estilo WordPress)
+model CmsPage {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  content        String   @db.LongText
+  excerpt        String?  @db.Text
+  status         String   @default("draft")
+  showInNav      Boolean  @default(false)
+  navLabel       String?
+  sortOrder      Int      @default(0)
+  seoTitle       String?
+  seoDescription String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status, sortOrder])
+}
+
+/// Entradas de blog / noticias editables
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String?   @db.Text
+  content     String    @db.LongText
+  coverImage  String?
+  status      String    @default("draft")
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+/// Widgets del Home (orden y visibilidad; builtin + bloques HTML libres)
+model HomeWidget {
+  id        String   @id @default(cuid())
+  widgetKey String   @unique
+  label     String
+  /// "builtin" | "html"
+  kind      String   @default("builtin")
+  /// Contenido HTML (solo kind = html)
+  html      String?  @db.LongText
+  enabled   Boolean  @default(true)
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+/// Ítems del menú principal (Header / Footer)
+model NavItem {
+  id        String   @id @default(cuid())
+  label     String
+  href      String
+  enabled   Boolean  @default(true)
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model HeroSlide {
+  id        String   @id @default(cuid())
+  src       String
+  alt       String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Store {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  /// Número / etiqueta de local en el plano (ej. L-01, Ancla)
+  unitLabel   String   @default("")
+  phone       String   @default("")
+  email       String   @default("")
+  website     String   @default("")
+  hours       String   @db.Text
+  category    String
+  /// Abierto | Próximamente | Cerrado
+  status      String   @default("Abierto")
+  level       String   @default("Nivel 2")
+  description String?  @db.Text
+  logo        String   @default("")
+  hotspotX    Float
+  hotspotY    Float
+  hotspotW    Float
+  hotspotH    Float
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model CommercialSpace {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  category  String
+  area      Float
+  phase     Int
+  level     String?
+  status    String
+  featured  Boolean  @default(false)
+  image     String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([featured])
+}
+
+model GalleryItem {
+  id        String   @id @default(cuid())
+  src       String
+  alt       String   @db.Text
+  span      String   @default("square")
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String
+  logo      String?
+  logoScale Float    @default(1)
+  note      String?  @db.Text
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model MasterPlanPhase {
+  id          String   @id @default(cuid())
+  tabId       String   @unique
+  label       String
+  title       String
+  description String   @db.Text
+  image       String
+  imageAlt    String
+  gallery     Json     @default("[]")
+  highlights  Json
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model ContactLead {
+  id            String   @id @default(cuid())
+  fullName      String
+  company       String?
+  email         String
+  phone         String
+  interest      String
+  spaceCategory String
+  approxArea    String?
+  message       String   @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}

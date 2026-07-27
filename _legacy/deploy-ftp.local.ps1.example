@@ -1,0 +1,11 @@
+# Copia a deploy-ftp.local.ps1 y ajusta (deploy-ftp.local.ps1 está en .gitignore).
+# Ejecuta: .\deploy-ftp.local.ps1
+
+$env:FTP_USER = "usuario_ftp"
+$env:FTP_PASS = "tu_contraseña"
+
+& "$PSScriptRoot\deploy-ftp.ps1" `
+  -FtpHost "ftp.tudominio.com" `
+  -RemoteBasePath "/public_html"
+# Si al entrar por FTP ya estás dentro de public_html, usa: -RemoteBasePath ""
+# Si el hosting exige FTPS: añade -UseSsl

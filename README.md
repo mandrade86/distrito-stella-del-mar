@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Distrito Stella del Mar
 
-## Getting Started
+Sitio web premium (Next.js 15) para el desarrollo comercial **Distrito Stella del Mar** en Puerto Cortés, Honduras.
 
-First, run the development server:
+## Stack
+
+- Next.js 15 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS 4
+- Framer Motion
+- Lucide React
+- React Hook Form + Zod
+
+## Instalación
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Comando | Descripción |
+|---|---|
+| `npm run dev` | Desarrollo (Turbopack) |
+| `npm run build` | Build de producción (sin Turbopack) |
+| `npm run start` | Servidor de producción |
+| `npm run deploy:prepare` | `npm ci` + schema DB + build |
+| `npm run lint` | ESLint |
 
-## Learn More
+## Estructura
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/app/                 # Rutas App Router + API
+src/components/layout/   # Header, Footer, WhatsApp
+src/components/sections/ # Secciones de la landing
+src/components/ui/       # UI reutilizable
+src/config/contact.ts    # Contacto / env
+src/data/                # Locales, galería, master plan
+src/lib/                 # Utils y validaciones
+public/images/           # Logos, renders, masterplan
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Variables de entorno
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Ver [`.env.example`](.env.example):
 
-## Deploy on Vercel
+- `NEXT_PUBLIC_SITE_URL`
+- `NEXT_PUBLIC_CONTACT_EMAIL`
+- `NEXT_PUBLIC_CONTACT_PHONE`
+- `NEXT_PUBLIC_WHATSAPP_NUMBER`
+- `NEXT_PUBLIC_MAPS_URL`
+- `NEXT_PUBLIC_MAP_LAT` / `NEXT_PUBLIC_MAP_LNG`
+- `NEXT_PUBLIC_FACEBOOK_URL` / `INSTAGRAM` / `LINKEDIN` / `TIKTOK`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Valores no configurados aparecen como pendientes en UI (no se inventan datos).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Coordinadas / mapa
+
+1. Obtén lat/lng del predio.
+2. Define `NEXT_PUBLIC_MAP_LAT` y `NEXT_PUBLIC_MAP_LNG`.
+3. Opcional: `NEXT_PUBLIC_MAPS_URL` con el enlace de Google Maps.
+
+## Contacto API
+
+`POST /api/contact` valida el payload con Zod. En desarrollo registra en consola.  
+Integrar SendGrid, Resend o CRM en [`src/app/api/contact/route.ts`](src/app/api/contact/route.ts).
+
+## Assets
+
+Logos oficiales y renders viven en `public/images/`. No recrear el logo con CSS/IA.
+
+## Datos pendientes de confirmar
+
+- Teléfono, correo, WhatsApp y redes sociales
+- Coordenadas exactas / URL de Google Maps
+- Logos oficiales de marcas ancla (hoy tipográficos)
+- Planos master plan vectoriales/PDF formales
+- Inventario real de locales y estados
+- Integración de correo/CRM en `/api/contact`
+
+## Deploy
+
+### GoDaddy (pruebas + producción)
+
+Ver la guía completa: [`DEPLOY-GODADDY.md`](DEPLOY-GODADDY.md).
+
+Resumen:
+
+1. Copiar `.env.staging.example` o `.env.production.example` → `.env` en cada servidor.
+2. Node **20+** + MySQL (bases **separadas**).
+3. `npm run deploy:prepare` (o Docker compose staging/production).
+4. Staging usa `NEXT_PUBLIC_SITE_ENV=staging` (no se indexa). Producción = `production`.
+
+### Vercel (alternativa)
+
+```bash
+npx vercel --prod
+```
+
+Configurar las mismas variables de entorno en el panel de Vercel (un proyecto staging y otro production, o preview + production).
