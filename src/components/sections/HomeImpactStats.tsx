@@ -26,7 +26,7 @@ function parseStat(raw: string): {
 
   const prefix = match[1] ?? "";
   const numeric = (match[2] ?? "").replace(/,/g, "");
-  let rest = (match[3] ?? "").trim();
+  const rest = (match[3] ?? "").trim();
   const value = Number(numeric);
   const decimals = numeric.includes(".")
     ? (numeric.split(".")[1]?.length ?? 0)

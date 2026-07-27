@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { GalleryImagesField } from "@/components/admin/GalleryImagesField";
 
@@ -48,7 +48,7 @@ export function AdminCrudTable({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -61,11 +61,11 @@ export function AdminCrudTable({
     } finally {
       setLoading(false);
     }
-  }
+  }, [endpoint]);
 
   useEffect(() => {
     void load();
-  }, [endpoint]);
+  }, [load]);
 
   function startCreate() {
     setEditingId(null);
