@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { hotspotShapeClass } from "@/lib/hotspot-shapes";
 
 export type HotspotBox = { x: number; y: number; w: number; h: number };
 
@@ -10,6 +11,8 @@ type Props = {
   value: HotspotBox;
   onChange: (next: HotspotBox) => void;
   otherHotspots?: Array<HotspotBox & { label?: string }>;
+  /** Etiqueta del local en edición (AS-01…) para previsualizar la forma del plano. */
+  activeLabel?: string;
 };
 
 function clamp(n: number, min: number, max: number) {
@@ -22,6 +25,7 @@ export function FloorHotspotEditor({
   value,
   onChange,
   otherHotspots = [],
+  activeLabel,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [drawing, setDrawing] = useState<{
@@ -106,7 +110,10 @@ export function FloorHotspotEditor({
         {otherHotspots.map((h, i) => (
           <div
             key={i}
-            className="pointer-events-none absolute border border-ocean/30 bg-ocean/10"
+            className={cn(
+              "pointer-events-none absolute border border-ocean/30 bg-ocean/10",
+              hotspotShapeClass(h.label),
+            )}
             style={{
               left: `${h.x}%`,
               top: `${h.y}%`,
@@ -124,6 +131,7 @@ export function FloorHotspotEditor({
         <div
           className={cn(
             "pointer-events-none absolute border-2 border-gold bg-gold/25",
+            hotspotShapeClass(activeLabel),
             drawing && "border-dashed",
           )}
           style={{

@@ -47,6 +47,26 @@ async function main() {
     })),
   });
 
+  await prisma.floorPlanLevel.deleteMany();
+  await prisma.floorPlanLevel.createMany({
+    data: [
+      {
+        key: "n1",
+        label: "Planta 1",
+        planImage: "/images/masterplan/levels/nivel-1.png",
+        sortOrder: 0,
+        active: true,
+      },
+      {
+        key: "n2",
+        label: "Planta 2",
+        planImage: "/images/masterplan/levels/nivel-2.png",
+        sortOrder: 1,
+        active: true,
+      },
+    ],
+  });
+
   await prisma.store.deleteMany();
   await prisma.store.createMany({
     data: staticStores.map((store, index) => ({
@@ -59,7 +79,10 @@ async function main() {
       hours: store.hours,
       category: store.category,
       status: store.status ?? "Abierto",
+      leasingStatus: store.leasingStatus ?? "Ocupado",
+      floorPlanKey: store.floorPlanKey ?? "n2",
       level: store.level ?? "Nivel 2",
+      area: store.area ?? null,
       description: store.description ?? "",
       logo: store.logo,
       hotspotX: store.hotspot.x,

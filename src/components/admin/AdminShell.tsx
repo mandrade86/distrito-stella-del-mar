@@ -18,6 +18,7 @@ import {
   Layers3,
   FilePlus2,
   LayoutPanelTop,
+  LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ const links = [
   { href: "/admin/menu", label: "Menú", icon: Menu },
   { href: "/admin/slides", label: "Hero slides", icon: Images },
   { href: "/admin/stores", label: "Tiendas", icon: Store },
+  { href: "/admin/floor-plans", label: "Planos / Niveles", icon: LayoutGrid },
   { href: "/admin/spaces", label: "Locales", icon: Building2 },
   { href: "/admin/gallery", label: "Galería", icon: GalleryHorizontal },
   { href: "/admin/brands", label: "Marcas", icon: Layers3 },

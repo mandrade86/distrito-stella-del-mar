@@ -15,10 +15,16 @@ function clientKnowsGallery() {
   return Boolean(phase?.fields.some((f) => f.name === "gallery"));
 }
 
+function clientHasFloorPlanLevel(client: PrismaClient) {
+  return Boolean((client as { floorPlanLevel?: unknown }).floorPlanLevel);
+}
+
 function isStale(client: PrismaClient) {
   // Tras agregar modelos/campos el singleton de Next puede quedar viejo
   if (!(client as { navItem?: unknown }).navItem) return true;
   if (!clientKnowsGallery()) return true;
+  // FloorPlanLevel es requerido por /api/admin/floor-plans; si falta, regenerar cliente
+  if (!clientHasFloorPlanLevel(client)) return true;
   return false;
 }
 

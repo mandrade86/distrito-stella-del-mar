@@ -1,9 +1,12 @@
-import type { Store } from "@/data/stores";
+import type { Store, FloorPlanLevel } from "@/data/stores";
 import type { CommercialSpace } from "@/data/spaces";
 import type { GalleryItem } from "@/data/gallery";
 import type { AnchorBrand } from "@/data/brands";
 import type { MasterPlanPhase } from "@/data/masterplan";
-import { stores as staticStores } from "@/data/stores";
+import {
+  stores as staticStores,
+  DEFAULT_FLOOR_PLANS,
+} from "@/data/stores";
 import { spaces as staticSpaces, featuredSpaces as staticFeatured } from "@/data/spaces";
 import { galleryItems as staticGallery } from "@/data/gallery";
 import { anchorBrands as staticBrands } from "@/data/brands";
@@ -343,6 +346,26 @@ export async function getNavItems(): Promise<NavItemData[]> {
   }
 }
 
+export async function getFloorPlanLevels(): Promise<FloorPlanLevel[]> {
+  if (!(await dbAvailable())) return DEFAULT_FLOOR_PLANS;
+  try {
+    const rows = await prisma.floorPlanLevel.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    if (!rows.length) return DEFAULT_FLOOR_PLANS;
+    return rows.map((row) => ({
+      key: row.key,
+      label: row.label,
+      planImage: row.planImage || DEFAULT_FLOOR_PLANS.find((p) => p.key === row.key)?.planImage || "",
+      sortOrder: row.sortOrder,
+      active: row.active,
+    }));
+  } catch {
+    return DEFAULT_FLOOR_PLANS;
+  }
+}
+
 export async function getStores(): Promise<Store[]> {
   if (!(await dbAvailable())) return staticStores;
   try {
@@ -353,7 +376,7 @@ export async function getStores(): Promise<Store[]> {
     if (!rows.length) return staticStores;
     return rows.map((row) => ({
       id: row.code,
-      name: row.name,
+      name: row.name || "Sin asignar",
       unitLabel: row.unitLabel || undefined,
       phone: row.phone,
       email: row.email || undefined,
@@ -361,7 +384,10 @@ export async function getStores(): Promise<Store[]> {
       hours: row.hours,
       category: row.category,
       status: row.status || undefined,
+      leasingStatus: (row.leasingStatus as Store["leasingStatus"]) || "Disponible",
+      floorPlanKey: row.floorPlanKey || "n2",
       level: row.level || undefined,
+      area: row.area ?? undefined,
       description: row.description || undefined,
       logo: row.logo,
       hotspot: {

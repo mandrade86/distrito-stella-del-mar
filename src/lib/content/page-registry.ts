@@ -330,7 +330,7 @@ export const PAGE_REGISTRY: PageDef[] = [
             key: "planImage",
             label: "Imagen del plano",
             type: "image",
-            defaultValue: "/images/masterplan/plano-tiendas-render.png",
+            defaultValue: "/images/masterplan/levels/nivel-2.png",
           },
         ],
       },

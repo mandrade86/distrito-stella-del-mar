@@ -5,6 +5,16 @@ export interface StoreHotspot {
   h: number;
 }
 
+export type LeasingStatus = "Disponible" | "Reservado" | "Ocupado";
+
+export interface FloorPlanLevel {
+  key: string;
+  label: string;
+  planImage: string;
+  sortOrder: number;
+  active: boolean;
+}
+
 export interface Store {
   id: string;
   name: string;
@@ -15,11 +25,51 @@ export interface Store {
   hours: string;
   category: string;
   status?: string;
+  leasingStatus?: LeasingStatus;
+  floorPlanKey?: string;
   level?: string;
+  area?: number;
   description?: string;
   logo: string;
   hotspot: StoreHotspot;
 }
+
+export const LEASING_STATUSES: LeasingStatus[] = [
+  "Disponible",
+  "Reservado",
+  "Ocupado",
+];
+
+export const STORE_CATEGORIES = [
+  "Ancla",
+  "Autoservicio",
+  "Retail",
+  "Servicios",
+  "Financiero",
+  "Food Court",
+  "Pad",
+  "Local",
+  "Local exterior",
+] as const;
+
+export type StoreCategory = (typeof STORE_CATEGORIES)[number];
+
+export const DEFAULT_FLOOR_PLANS: FloorPlanLevel[] = [
+  {
+    key: "n1",
+    label: "Planta 1",
+    planImage: "/images/masterplan/levels/nivel-1-masterplan.png",
+    sortOrder: 0,
+    active: true,
+  },
+  {
+    key: "n2",
+    label: "Planta 2",
+    planImage: "/images/masterplan/levels/nivel-2.png",
+    sortOrder: 1,
+    active: true,
+  },
+];
 
 /**
  * Hotspots en % sobre el plano interactivo.
@@ -36,6 +86,8 @@ export const stores: Store[] = [
     hours: "Lun–Sáb 10:00–20:00 · Dom 10:00–18:00",
     category: "Ancla",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     description: "Tienda ancla de departamento y hogar.",
     logo: "/images/logos/brand-diunsa.png",
@@ -49,6 +101,8 @@ export const stores: Store[] = [
     hours: "Lun–Sáb 10:00–20:00 · Dom 11:00–18:00",
     category: "Retail",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     description: "Moda y accesorios.",
     logo: "/images/logos/brand-carrion.png",
@@ -62,6 +116,8 @@ export const stores: Store[] = [
     hours: "Lun–Dom 08:00–21:00",
     category: "Servicios",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/icon-star-color.png",
     hotspot: { x: 66.6, y: 49, w: 28.1, h: 7 },
@@ -74,6 +130,8 @@ export const stores: Store[] = [
     hours: "Lun–Sáb 10:00–20:00 · Dom 11:00–18:00",
     category: "Autoservicio",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/brand-xtra.jpg",
     hotspot: { x: 13.2, y: 54.3, w: 17.7, h: 8.5 },
@@ -86,6 +144,8 @@ export const stores: Store[] = [
     hours: "Lun–Sáb 10:00–19:00 · Dom cerrado",
     category: "Retail",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/logo-gold.png",
     hotspot: { x: 66.4, y: 57.3, w: 14.3, h: 7.8 },
@@ -98,6 +158,8 @@ export const stores: Store[] = [
     hours: "Lun–Vie 09:00–16:00 · Sáb 09:00–12:00",
     category: "Financiero",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/logo-blue-crop.png",
     hotspot: { x: 81.1, y: 57.3, w: 14.3, h: 7.8 },
@@ -110,6 +172,8 @@ export const stores: Store[] = [
     hours: "Lun–Sáb 10:00–20:00 · Dom 11:00–18:00",
     category: "Autoservicio",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/brand-super-barato.jpg",
     hotspot: { x: 13.2, y: 65.5, w: 15, h: 5.5 },
@@ -122,6 +186,8 @@ export const stores: Store[] = [
     hours: "Lun–Vie 10:00–19:00 · Sáb 10:00–18:00",
     category: "Servicios",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/icon-star-color.png",
     hotspot: { x: 13.2, y: 71, w: 15.3, h: 7.2 },
@@ -134,6 +200,8 @@ export const stores: Store[] = [
     hours: "Lun–Dom 11:00–21:00",
     category: "Food Court",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/logo-full-color.png",
     hotspot: { x: 50.6, y: 71, w: 15.5, h: 7.2 },
@@ -146,6 +214,8 @@ export const stores: Store[] = [
     hours: "Lun–Sáb 10:00–20:00 · Dom 10:00–18:00",
     category: "Retail",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/logo-blue-crop.png",
     hotspot: { x: 13.2, y: 78.8, w: 15.5, h: 6 },
@@ -158,6 +228,8 @@ export const stores: Store[] = [
     hours: "Lun–Dom 11:00–21:00",
     category: "Food Court",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/logo-gold.png",
     hotspot: { x: 50.4, y: 78.8, w: 15.7, h: 6 },
@@ -170,6 +242,8 @@ export const stores: Store[] = [
     hours: "Lun–Dom 08:00–21:00",
     category: "Food Court",
     status: "Abierto",
+    leasingStatus: "Ocupado",
+    floorPlanKey: "n2",
     level: "Nivel 2",
     logo: "/images/logos/icon-star-color.png",
     hotspot: { x: 13.2, y: 85, w: 16.4, h: 6 },

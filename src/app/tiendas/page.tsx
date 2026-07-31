@@ -3,27 +3,35 @@ import { PageHero } from "@/components/ui/PageHero";
 import { PageHtmlBody } from "@/components/sections/PageHtmlBody";
 import { StoreFloorPlan } from "@/components/sections/StoreFloorPlan";
 import { SharedSections } from "@/components/sections/SharedSections";
-import { getPageCopy, getSharedCopy, getStores } from "@/lib/content";
+import {
+  getFloorPlanLevels,
+  getPageCopy,
+  getPublicContact,
+  getSharedCopy,
+  getStores,
+} from "@/lib/content";
 import { resolvePageHero } from "@/lib/content/page-hero";
 
 export const metadata: Metadata = {
   title: "Tiendas | Distrito Stella del Mar",
   description:
-    "Explore el plano del centro y consulte teléfono y horarios de las tiendas de Distrito Stella del Mar.",
+    "Explore el plano del centro y consulte disponibilidad, teléfono y horarios de las tiendas de Distrito Stella del Mar.",
   alternates: { canonical: "/tiendas" },
 };
 
 export default async function StoresPage() {
-  const [stores, copy, shared] = await Promise.all([
+  const [stores, levels, copy, shared, contact] = await Promise.all([
     getStores(),
+    getFloorPlanLevels(),
     getPageCopy("tiendas"),
     getSharedCopy(),
+    getPublicContact(),
   ]);
   const hero = resolvePageHero(copy.pageHero, {
     eyebrow: "Tiendas",
     title: "Directorio del distrito",
     description:
-      "Consulte el plano interactivo para ubicar locales y conocer teléfonos y horarios de atención.",
+      "Consulte el plano interactivo por nivel: disponibles, reservados y ocupados.",
     image: "/images/renders/sdm-05.png",
     imageAlt: "Plaza interior de Distrito Stella del Mar",
   });
@@ -32,7 +40,12 @@ export default async function StoresPage() {
     <>
       <PageHero {...hero} />
       <PageHtmlBody copy={copy.htmlBody} />
-      <StoreFloorPlan stores={stores} copy={copy.floorPlan} />
+      <StoreFloorPlan
+        stores={stores}
+        levels={levels}
+        copy={copy.floorPlan}
+        whatsapp={contact.whatsapp}
+      />
       <SharedSections pageSlug="tiendas" shared={shared} />
     </>
   );

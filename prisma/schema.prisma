@@ -110,6 +110,19 @@ model HeroSlide {
   @@index([sortOrder])
 }
 
+model FloorPlanLevel {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  label      String
+  planImage  String   @default("")
+  sortOrder  Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
 model Store {
   id          String   @id @default(cuid())
   code        String   @unique
@@ -121,9 +134,14 @@ model Store {
   website     String   @default("")
   hours       String   @db.Text
   category    String
-  /// Abierto | Próximamente | Cerrado
+  /// Operativo: Abierto | Próximamente | Cerrado
   status      String   @default("Abierto")
+  /// Alquiler: Disponible | Reservado | Ocupado
+  leasingStatus String @default("Disponible")
+  /// Clave del FloorPlanLevel (ej. n1, n2)
+  floorPlanKey String @default("n2")
   level       String   @default("Nivel 2")
+  area        Float?
   description String?  @db.Text
   logo        String   @default("")
   hotspotX    Float
@@ -136,6 +154,8 @@ model Store {
   updatedAt   DateTime @updatedAt
 
   @@index([sortOrder])
+  @@index([floorPlanKey])
+  @@index([leasingStatus])
 }
 
 model CommercialSpace {
