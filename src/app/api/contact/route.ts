@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { contactSchema, type ContactFormValues } from "@/lib/validations/contact";
 import { siteConfig } from "@/config/contact";
+import { getAdminSession } from "@/lib/auth/admin";
 import { dbAvailable, prisma } from "@/lib/db";
+import { isSiteLive } from "@/lib/site-access";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
@@ -64,6 +66,13 @@ function buildEmailHtml(data: ContactFormValues) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!(await isSiteLive()) && !(await getAdminSession())) {
+      return NextResponse.json(
+        { ok: false, error: "Sitio no público." },
+        { status: 403 },
+      );
+    }
+
     const body: unknown = await request.json();
     const parsed = contactSchema.safeParse(body);
 

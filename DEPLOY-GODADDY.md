@@ -120,18 +120,41 @@ npx tsx prisma/seed.ts
 
 6. Application startup file:
 
-- Preferido (standalone): tras el build, en muchos planes funciona mejor arrancar con PM2 o:
+- Preferido (standalone): el script `npm run build` **ya copia** `public/` (imágenes, logos, masterplan) y `.next/static` dentro de `.next/standalone`.
 
 ```bash
-# Preparar standalone (Linux)
-cp -r .next/static .next/standalone/.next/static
-cp -r public .next/standalone/public
+npm ci
+npx prisma generate
+npx prisma db push
+npm run build
+# Opcional primera vez:
+npx tsx prisma/seed.ts
+```
+
+Si en algún plan el copy no corrió:
+
+```bash
+npm run deploy:copy-public
+# equivalente a:
+# cp -r public .next/standalone/public
+# cp -r .next/static .next/standalone/.next/static
 ```
 
 Startup: `.next/standalone/server.js`  
 o script npm: `start` → `next start -H 0.0.0.0` (cPanel inyecta `PORT`).
 
+**Imágenes:** van en `public/images/` (en git). Tras cada build/deploy deben existir en `public/` junto al `server.js` standalone. Uploads del CMS viven en `public/uploads/` (persistir en disco; no están en git).
+
 7. Reiniciar la aplicación Node en cPanel.
+
+### Sitio en vivo (preview privado)
+
+En **Admin → Ajustes** hay un interruptor **Sitio en vivo**:
+
+- Apagado (default al seed): el público ve “Pronto abriremos”; solo quien inicia sesión en `/admin` ve el sitio.
+- Encendido: sitio abierto a todos.
+
+Opcional en env: `SITE_LIVE=true|false` fuerza el modo (prioridad sobre el toggle).
 
 Repetir el mismo proceso en el **otro** dominio/subdominio con su propio `.env` y su propia BD.
 

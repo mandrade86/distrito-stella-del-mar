@@ -1,8 +1,17 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Manrope, Playfair_Display } from "next/font/google";
+import { ComingSoon } from "@/components/layout/ComingSoon";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { siteConfig } from "@/config/contact";
-import { getNavItems, getPublishedCmsPages, getPublicContact } from "@/lib/content";
+import { getAdminSession } from "@/lib/auth/admin";
+import { isSiteAccessExempt } from "@/lib/auth/session-edge";
+import {
+  getNavItems,
+  getPublishedCmsPages,
+  getPublicContact,
+} from "@/lib/content";
+import { isSiteLive } from "@/lib/site-access";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -87,6 +96,24 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = (await headers()).get("x-pathname") || "/";
+  const exempt = isSiteAccessExempt(pathname);
+  const live = exempt ? true : await isSiteLive();
+  const session = live || exempt ? null : await getAdminSession();
+  const allowPublic = live || exempt || Boolean(session);
+
+  if (!allowPublic) {
+    return (
+      <html lang="es">
+        <body
+          className={`${manrope.variable} ${playfair.variable} font-sans antialiased`}
+        >
+          <ComingSoon />
+        </body>
+      </html>
+    );
+  }
+
   const [navItems, cmsPages, contact] = await Promise.all([
     getNavItems(),
     getPublishedCmsPages(),

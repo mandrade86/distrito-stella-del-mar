@@ -1,11 +1,13 @@
 import type { MetadataRoute } from "next";
+import { isSiteLive } from "@/lib/site-access";
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): MetadataRoute.Robots {
   const isProduction = process.env.NEXT_PUBLIC_SITE_ENV === "production";
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://distritostelladelmar.com";
+  const live = await isSiteLive();
 
-  if (!isProduction) {
+  if (!isProduction || !live) {
     return {
       rules: { userAgent: "*", disallow: "/" },
     };

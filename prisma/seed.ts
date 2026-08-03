@@ -150,6 +150,7 @@ async function main() {
   }
 
   const settings: Record<string, string> = {
+    siteLive: "false",
     contactEmail: "info@distritostelladelmar.com",
     contactPhone: "",
     whatsapp: "",
@@ -169,6 +170,13 @@ async function main() {
   };
 
   for (const [key, value] of Object.entries(settings)) {
+    if (key === "siteLive") {
+      const existing = await prisma.siteSetting.findUnique({ where: { key } });
+      if (!existing) {
+        await prisma.siteSetting.create({ data: { key, value } });
+      }
+      continue;
+    }
     await prisma.siteSetting.upsert({
       where: { key },
       update: { value },
