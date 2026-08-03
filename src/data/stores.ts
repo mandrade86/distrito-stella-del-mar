@@ -5,6 +5,8 @@ export interface StoreHotspot {
   h: number;
 }
 
+export type HotspotPoint = { x: number; y: number };
+
 export type LeasingStatus = "Disponible" | "Reservado" | "Ocupado";
 
 export interface FloorPlanLevel {
@@ -32,6 +34,8 @@ export interface Store {
   description?: string;
   logo: string;
   hotspot: StoreHotspot;
+  /** Polígono en % del plano (prioridad sobre rectángulo si ≥ 3 puntos). */
+  polygon?: HotspotPoint[];
 }
 
 export const LEASING_STATUSES: LeasingStatus[] = [

@@ -7,6 +7,8 @@ export type FloorLevelOption = {
   active: boolean;
 };
 
+export type HotspotPoint = { x: number; y: number };
+
 export type StoreRow = {
   id: string;
   code: string;
@@ -28,6 +30,7 @@ export type StoreRow = {
   hotspotY: number;
   hotspotW: number;
   hotspotH: number;
+  hotspotPolygon: HotspotPoint[];
   sortOrder: number;
   active: boolean;
 };
@@ -58,6 +61,7 @@ export function blankStore(
     hotspotY: 20,
     hotspotW: 12,
     hotspotH: 8,
+    hotspotPolygon: [],
     sortOrder: 0,
     active: true,
   };

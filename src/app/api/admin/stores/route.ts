@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { withAdmin } from "@/lib/admin-api";
 import { prisma } from "@/lib/db";
+import {
+  parseHotspotPolygon,
+  polygonToBox,
+} from "@/lib/hotspot-polygon";
 
 function storeData(body: Record<string, unknown>) {
   const leasing = String(body.leasingStatus ?? "Disponible").trim();
@@ -11,6 +16,9 @@ function storeData(body: Record<string, unknown>) {
     areaRaw === "" || areaRaw == null || Number.isNaN(Number(areaRaw))
       ? null
       : Number(areaRaw);
+
+  const polygon = parseHotspotPolygon(body.hotspotPolygon);
+  const boxFromPoly = polygon.length >= 3 ? polygonToBox(polygon) : null;
 
   return {
     code: String(body.code ?? "").trim(),
@@ -28,10 +36,14 @@ function storeData(body: Record<string, unknown>) {
     area,
     description: String(body.description ?? "").trim() || null,
     logo: String(body.logo ?? "").trim(),
-    hotspotX: Number(body.hotspotX ?? 0),
-    hotspotY: Number(body.hotspotY ?? 0),
-    hotspotW: Number(body.hotspotW ?? 10),
-    hotspotH: Number(body.hotspotH ?? 10),
+    hotspotX: boxFromPoly?.x ?? Number(body.hotspotX ?? 0),
+    hotspotY: boxFromPoly?.y ?? Number(body.hotspotY ?? 0),
+    hotspotW: boxFromPoly?.w ?? Number(body.hotspotW ?? 10),
+    hotspotH: boxFromPoly?.h ?? Number(body.hotspotH ?? 10),
+    hotspotPolygon:
+      polygon.length >= 3
+        ? (polygon as unknown as Prisma.InputJsonValue)
+        : Prisma.JsonNull,
     sortOrder: Number(body.sortOrder ?? 0),
     active: body.active !== false,
   };
@@ -65,9 +77,29 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const id = new URL(request.url).searchParams.get("id");
   return withAdmin(async () => {
-    if (!id) throw new Error("Missing id");
-    return prisma.store.delete({ where: { id } });
+    const url = new URL(request.url);
+    const id = url.searchParams.get("id");
+    let ids: string[] = id ? [id] : [];
+
+    if (!ids.length) {
+      try {
+        const body = await request.json();
+        if (Array.isArray(body?.ids)) {
+          ids = body.ids.map((v: unknown) => String(v)).filter(Boolean);
+        } else if (body?.id) {
+          ids = [String(body.id)];
+        }
+      } catch {
+        // sin body JSON
+      }
+    }
+
+    if (!ids.length) throw new Error("Missing id");
+
+    const result = await prisma.store.deleteMany({
+      where: { id: { in: ids } },
+    });
+    return { deleted: result.count, ids };
   });
 }

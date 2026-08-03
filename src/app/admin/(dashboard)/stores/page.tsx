@@ -14,8 +14,11 @@ export default function AdminStoresPage() {
   const [levels, setLevels] = useState<FloorLevelOption[]>([]);
   const [filterLevel, setFilterLevel] = useState<string>("all");
   const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,8 +45,12 @@ export default function AdminStoresPage() {
           leasingStatus: row.leasingStatus || "Disponible",
           floorPlanKey: row.floorPlanKey || "n2",
           area: row.area ?? null,
+          hotspotPolygon: Array.isArray(row.hotspotPolygon)
+            ? row.hotspotPolygon
+            : [],
         })),
       );
+      setSelected(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
@@ -85,8 +92,41 @@ export default function AdminStoresPage() {
     });
   }, [rows, filterLevel, query]);
 
+  const filteredIds = useMemo(
+    () => filteredRows.map((r) => r.id),
+    [filteredRows],
+  );
+
+  const allFilteredSelected =
+    filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
+
+  const someFilteredSelected = filteredIds.some((id) => selected.has(id));
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllFiltered() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) {
+        for (const id of filteredIds) next.delete(id);
+      } else {
+        for (const id of filteredIds) next.add(id);
+      }
+      return next;
+    });
+  }
+
   async function remove(id: string) {
     if (!confirm("¿Eliminar este local del plano?")) return;
+    setError("");
+    setMessage("");
     const res = await fetch(`/api/admin/stores?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
@@ -95,7 +135,39 @@ export default function AdminStoresPage() {
       setError(json.error || "No se pudo eliminar");
       return;
     }
+    setMessage("Local eliminado.");
     await load();
+  }
+
+  async function removeSelected() {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (
+      !confirm(
+        `¿Eliminar ${ids.length} local${ids.length === 1 ? "" : "es"} seleccionado${ids.length === 1 ? "" : "s"}?`,
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch("/api/admin/stores", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "No se pudo eliminar");
+      const count = json.data?.deleted ?? ids.length;
+      setMessage(`${count} local${count === 1 ? "" : "es"} eliminado${count === 1 ? "" : "s"}.`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -160,13 +232,53 @@ export default function AdminStoresPage() {
         </p>
       </div>
 
+      {selected.size > 0 ? (
+        <div className="flex flex-wrap items-center gap-3 border border-red-200 bg-red-50/80 px-3 py-2">
+          <p className="text-sm text-navy">
+            {selected.size} seleccionado{selected.size === 1 ? "" : "s"}
+          </p>
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={() => void removeSelected()}
+            className="inline-flex items-center gap-1.5 rounded-sm border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {deleting ? "Eliminando…" : "Eliminar seleccionados"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="text-xs text-muted underline"
+          >
+            Limpiar selección
+          </button>
+        </div>
+      ) : null}
+
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {message ? <p className="text-sm text-ocean">{message}</p> : null}
       {loading ? <p className="text-sm text-muted">Cargando…</p> : null}
 
       <div className="overflow-x-auto border border-navy/10 bg-white">
         <table className="min-w-full text-left text-sm">
           <thead className="bg-sand/60 text-xs uppercase tracking-wide text-navy">
             <tr>
+              <th className="w-10 px-3 py-2">
+                <input
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  ref={(el) => {
+                    if (el) {
+                      el.indeterminate =
+                        someFilteredSelected && !allFilteredSelected;
+                    }
+                  }}
+                  onChange={toggleAllFiltered}
+                  aria-label="Seleccionar todos los visibles"
+                  disabled={!filteredIds.length}
+                />
+              </th>
               <th className="px-3 py-2">Local</th>
               <th className="px-3 py-2">Nombre</th>
               <th className="px-3 py-2">Nivel</th>
@@ -177,45 +289,59 @@ export default function AdminStoresPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredRows.map((row) => (
-              <tr key={row.id} className="border-t border-navy/10">
-                <td className="px-3 py-2 font-medium text-navy">
-                  {row.unitLabel || row.code}
-                </td>
-                <td className="px-3 py-2">{row.name || "Sin asignar"}</td>
-                <td className="px-3 py-2 text-muted">
-                  {planOptions.find((p) => p.key === row.floorPlanKey)?.label ||
-                    row.level}
-                </td>
-                <td className="px-3 py-2">{row.leasingStatus || "Disponible"}</td>
-                <td className="px-3 py-2 text-muted">{row.category}</td>
-                <td className="px-3 py-2">{row.active ? "Sí" : "No"}</td>
-                <td className="px-3 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/admin/stores/${row.id}`}
-                      className="inline-flex items-center gap-1 rounded-sm border border-navy/15 px-2.5 py-1.5 text-xs font-medium text-navy hover:border-ocean/40 hover:text-ocean"
-                      title="Editar"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Editar
-                    </Link>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 rounded-sm border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
-                      onClick={() => remove(row.id)}
-                      title="Eliminar"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Eliminar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {filteredRows.map((row) => {
+              const isChecked = selected.has(row.id);
+              return (
+                <tr
+                  key={row.id}
+                  className={`border-t border-navy/10 ${isChecked ? "bg-ocean/5" : ""}`}
+                >
+                  <td className="px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleOne(row.id)}
+                      aria-label={`Seleccionar ${row.unitLabel || row.code}`}
+                    />
+                  </td>
+                  <td className="px-3 py-2 font-medium text-navy">
+                    {row.unitLabel || row.code}
+                  </td>
+                  <td className="px-3 py-2">{row.name || "Sin asignar"}</td>
+                  <td className="px-3 py-2 text-muted">
+                    {planOptions.find((p) => p.key === row.floorPlanKey)?.label ||
+                      row.level}
+                  </td>
+                  <td className="px-3 py-2">{row.leasingStatus || "Disponible"}</td>
+                  <td className="px-3 py-2 text-muted">{row.category}</td>
+                  <td className="px-3 py-2">{row.active ? "Sí" : "No"}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/admin/stores/${row.id}`}
+                        className="inline-flex items-center gap-1 rounded-sm border border-navy/15 px-2.5 py-1.5 text-xs font-medium text-navy hover:border-ocean/40 hover:text-ocean"
+                        title="Editar"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Editar
+                      </Link>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 rounded-sm border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
+                        onClick={() => remove(row.id)}
+                        title="Eliminar"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {!filteredRows.length && !loading ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-muted">
+                <td colSpan={8} className="px-3 py-6 text-center text-muted">
                   {query.trim()
                     ? "No hay resultados para esa búsqueda."
                     : "Aún no hay locales en este filtro."}

@@ -148,6 +148,8 @@ model Store {
   hotspotY    Float
   hotspotW    Float
   hotspotH    Float
+  /// Polígono en % del plano: [{x,y}, ...] — si tiene 3+ puntos, tiene prioridad sobre el rectángulo
+  hotspotPolygon Json?
   sortOrder   Int      @default(0)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())

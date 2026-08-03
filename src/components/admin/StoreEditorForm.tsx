@@ -75,6 +75,7 @@ export function StoreEditorForm({ mode, initial, levels, allStores }: Props) {
       w: r.hotspotW,
       h: r.hotspotH,
       label: r.unitLabel || r.code,
+      polygon: r.hotspotPolygon,
     }));
 
   function setField<K extends keyof StoreFormState>(
@@ -91,13 +92,17 @@ export function StoreEditorForm({ mode, initial, levels, allStores }: Props) {
     });
   }
 
-  function setHotspot(box: HotspotBox) {
+  function setHotspot(next: {
+    box: HotspotBox;
+    polygon: StoreFormState["hotspotPolygon"];
+  }) {
     setForm((prev) => ({
       ...prev,
-      hotspotX: box.x,
-      hotspotY: box.y,
-      hotspotW: box.w,
-      hotspotH: box.h,
+      hotspotX: next.box.x,
+      hotspotY: next.box.y,
+      hotspotW: next.box.w,
+      hotspotH: next.box.h,
+      hotspotPolygon: next.polygon,
     }));
   }
 
@@ -139,7 +144,8 @@ export function StoreEditorForm({ mode, initial, levels, allStores }: Props) {
           {mode === "edit" ? "Editar local" : "Nuevo local"}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Complete los datos y marque la zona en el plano del nivel.
+          Complete los datos y dibuje el local por puntos en el plano del nivel
+          (polígono, no solo un rectángulo).
         </p>
       </div>
 
@@ -324,7 +330,7 @@ export function StoreEditorForm({ mode, initial, levels, allStores }: Props) {
 
         <div>
           <p className="mb-2 text-sm font-medium text-navy">
-            Asignación en el plano ({form.level})
+            Forma del local en el plano ({form.level})
           </p>
           <FloorHotspotEditor
             planSrc={activePlanImage}
@@ -334,6 +340,7 @@ export function StoreEditorForm({ mode, initial, levels, allStores }: Props) {
               w: form.hotspotW,
               h: form.hotspotH,
             }}
+            polygon={form.hotspotPolygon}
             onChange={setHotspot}
             otherHotspots={otherHotspots}
             activeLabel={form.unitLabel}

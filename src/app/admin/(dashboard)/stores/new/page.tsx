@@ -25,7 +25,17 @@ export default function AdminNewStorePage() {
         const levelsJson = await levelsRes.json();
         if (!storesRes.ok) throw new Error(storesJson.error || "Error");
         if (!levelsRes.ok) throw new Error(levelsJson.error || "Error");
-        setStores(storesJson.data ?? []);
+        setStores(
+          (storesJson.data ?? []).map((r: StoreRow) => ({
+            ...r,
+            leasingStatus: r.leasingStatus || "Disponible",
+            floorPlanKey: r.floorPlanKey || "n2",
+            area: r.area ?? null,
+            hotspotPolygon: Array.isArray(r.hotspotPolygon)
+              ? r.hotspotPolygon
+              : [],
+          })),
+        );
         const levelRows: FloorLevelOption[] = levelsJson.data ?? [];
         setLevels(
           levelRows.length

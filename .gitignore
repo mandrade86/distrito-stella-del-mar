@@ -50,3 +50,6 @@ deploy-ftp.local.ps1
 # CMS uploaded images (keep folder)
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# local SQL dumps
+/dumps/

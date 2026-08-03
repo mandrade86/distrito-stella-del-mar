@@ -2,16 +2,28 @@
 
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { hotspotShapeClass } from "@/lib/hotspot-shapes";
+import {
+  boxToPolygon,
+  isValidPolygon,
+  polygonToBox,
+  polygonToSvgPoints,
+  type HotspotBox,
+  type HotspotPoint,
+} from "@/lib/hotspot-polygon";
 
-export type HotspotBox = { x: number; y: number; w: number; h: number };
+export type { HotspotBox, HotspotPoint };
+
+type OtherHotspot = HotspotBox & {
+  label?: string;
+  polygon?: HotspotPoint[];
+};
 
 type Props = {
   planSrc: string;
   value: HotspotBox;
-  onChange: (next: HotspotBox) => void;
-  otherHotspots?: Array<HotspotBox & { label?: string }>;
-  /** Etiqueta del local en edición (AS-01…) para previsualizar la forma del plano. */
+  polygon: HotspotPoint[];
+  onChange: (next: { box: HotspotBox; polygon: HotspotPoint[] }) => void;
+  otherHotspots?: OtherHotspot[];
   activeLabel?: string;
 };
 
@@ -19,21 +31,19 @@ function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
 
-/** Editor visual: arrastre en el plano para asignar el local. */
+/** Editor por puntos: clic para agregar vértices; arrastre para moverlos. */
 export function FloorHotspotEditor({
   planSrc,
   value,
+  polygon,
   onChange,
   otherHotspots = [],
   activeLabel,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [drawing, setDrawing] = useState<{
-    x0: number;
-    y0: number;
-    x1: number;
-    y1: number;
-  } | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  const points = polygon.length ? polygon : [];
 
   function pctFromEvent(clientX: number, clientY: number) {
     const el = ref.current;
@@ -45,60 +55,103 @@ export function FloorHotspotEditor({
     };
   }
 
-  function onPointerDown(e: React.PointerEvent) {
-    e.preventDefault();
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    const p = pctFromEvent(e.clientX, e.clientY);
-    setDrawing({ x0: p.x, y0: p.y, x1: p.x, y1: p.y });
-  }
-
-  function onPointerMove(e: React.PointerEvent) {
-    if (!drawing) return;
-    const p = pctFromEvent(e.clientX, e.clientY);
-    setDrawing({ ...drawing, x1: p.x, y1: p.y });
-  }
-
-  function onPointerUp(e: React.PointerEvent) {
-    if (!drawing) return;
-    const p = pctFromEvent(e.clientX, e.clientY);
-    const x0 = drawing.x0;
-    const y0 = drawing.y0;
-    const x1 = p.x;
-    const y1 = p.y;
-    const x = Math.min(x0, x1);
-    const y = Math.min(y0, y1);
-    const w = Math.max(2, Math.abs(x1 - x0));
-    const h = Math.max(2, Math.abs(y1 - y0));
+  function commit(nextPoints: HotspotPoint[]) {
+    const box =
+      nextPoints.length >= 3 ? polygonToBox(nextPoints) : value;
     onChange({
-      x: Number(x.toFixed(1)),
-      y: Number(y.toFixed(1)),
-      w: Number(w.toFixed(1)),
-      h: Number(h.toFixed(1)),
+      box,
+      polygon: nextPoints.map((p) => ({
+        x: Number(p.x.toFixed(2)),
+        y: Number(p.y.toFixed(2)),
+      })),
     });
-    setDrawing(null);
   }
 
-  const preview = drawing
-    ? {
-        x: Math.min(drawing.x0, drawing.x1),
-        y: Math.min(drawing.y0, drawing.y1),
-        w: Math.max(0.5, Math.abs(drawing.x1 - drawing.x0)),
-        h: Math.max(0.5, Math.abs(drawing.y1 - drawing.y0)),
-      }
-    : value;
+  function onCanvasClick(e: React.MouseEvent) {
+    if (dragIndex !== null) return;
+    // No agregar si clic en un handle
+    if ((e.target as HTMLElement).dataset.vertex != null) return;
+    const p = pctFromEvent(e.clientX, e.clientY);
+    commit([...points, p]);
+  }
+
+  function onVertexPointerDown(index: number, e: React.PointerEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    setDragIndex(index);
+  }
+
+  function onVertexPointerMove(e: React.PointerEvent) {
+    if (dragIndex === null) return;
+    e.preventDefault();
+    const p = pctFromEvent(e.clientX, e.clientY);
+    const next = points.map((pt, i) => (i === dragIndex ? p : pt));
+    commit(next);
+  }
+
+  function onVertexPointerUp(e: React.PointerEvent) {
+    if (dragIndex === null) return;
+    e.preventDefault();
+    setDragIndex(null);
+  }
+
+  function undoLast() {
+    if (!points.length) return;
+    commit(points.slice(0, -1));
+  }
+
+  function clearAll() {
+    commit([]);
+  }
+
+  function useRectangleFallback() {
+    commit(boxToPolygon(value));
+  }
 
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted">
-        Arrastre sobre el plano para marcar la zona del local. Los demás locales
-        se muestran en azul claro.
+        Haga clic en las esquinas del local para dibujar el polígono. Arrastre
+        los puntos para ajustar. Se necesitan al menos 3 puntos.
+        {activeLabel ? (
+          <>
+            {" "}
+            Editando <strong>{activeLabel}</strong>.
+          </>
+        ) : null}
       </p>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={undoLast}
+          disabled={!points.length}
+          className="rounded-sm border border-navy/15 px-2.5 py-1 text-xs disabled:opacity-40"
+        >
+          Deshacer punto
+        </button>
+        <button
+          type="button"
+          onClick={clearAll}
+          disabled={!points.length}
+          className="rounded-sm border border-navy/15 px-2.5 py-1 text-xs disabled:opacity-40"
+        >
+          Limpiar
+        </button>
+        <button
+          type="button"
+          onClick={useRectangleFallback}
+          className="rounded-sm border border-navy/15 px-2.5 py-1 text-xs"
+        >
+          Convertir rectángulo actual a 4 puntos
+        </button>
+      </div>
+
       <div
         ref={ref}
         className="relative touch-none select-none overflow-hidden border border-navy/15 bg-white"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
+        onClick={onCanvasClick}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -107,43 +160,71 @@ export function FloorHotspotEditor({
           className="pointer-events-none block h-auto w-full"
           draggable={false}
         />
-        {otherHotspots.map((h, i) => (
-          <div
+
+        <svg
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden
+        >
+          {otherHotspots.map((h, i) => {
+            const poly = isValidPolygon(h.polygon)
+              ? h.polygon!
+              : boxToPolygon(h);
+            return (
+              <polygon
+                key={i}
+                points={polygonToSvgPoints(poly)}
+                className="fill-ocean/15 stroke-ocean/40"
+                strokeWidth={0.35}
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+          })}
+          {points.length >= 2 ? (
+            <polyline
+              points={polygonToSvgPoints(
+                points.length >= 3 ? [...points, points[0]] : points,
+              )}
+              className="fill-gold/25 stroke-gold"
+              strokeWidth={0.45}
+              vectorEffect="non-scaling-stroke"
+            />
+          ) : null}
+          {points.length >= 3 ? (
+            <polygon
+              points={polygonToSvgPoints(points)}
+              className="fill-gold/30 stroke-gold"
+              strokeWidth={0.45}
+              vectorEffect="non-scaling-stroke"
+            />
+          ) : null}
+        </svg>
+
+        {points.map((p, i) => (
+          <button
             key={i}
+            type="button"
+            data-vertex={i}
+            title={`Punto ${i + 1}`}
             className={cn(
-              "pointer-events-none absolute border border-ocean/30 bg-ocean/10",
-              hotspotShapeClass(h.label),
+              "absolute z-10 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-gold shadow",
+              dragIndex === i && "scale-125 bg-navy",
             )}
-            style={{
-              left: `${h.x}%`,
-              top: `${h.y}%`,
-              width: `${h.w}%`,
-              height: `${h.h}%`,
-            }}
-          >
-            {h.label ? (
-              <span className="absolute left-0.5 top-0.5 bg-white/90 px-1 text-[9px] font-semibold text-navy">
-                {h.label}
-              </span>
-            ) : null}
-          </div>
+            style={{ left: `${p.x}%`, top: `${p.y}%` }}
+            onPointerDown={(e) => onVertexPointerDown(i, e)}
+            onPointerMove={onVertexPointerMove}
+            onPointerUp={onVertexPointerUp}
+            onClick={(e) => e.stopPropagation()}
+          />
         ))}
-        <div
-          className={cn(
-            "pointer-events-none absolute border-2 border-gold bg-gold/25",
-            hotspotShapeClass(activeLabel),
-            drawing && "border-dashed",
-          )}
-          style={{
-            left: `${preview.x}%`,
-            top: `${preview.y}%`,
-            width: `${preview.w}%`,
-            height: `${preview.h}%`,
-          }}
-        />
       </div>
+
       <p className="text-[11px] text-muted">
-        X {value.x}% · Y {value.y}% · W {value.w}% · H {value.h}%
+        {points.length} punto{points.length === 1 ? "" : "s"}
+        {isValidPolygon(points)
+          ? ` · polígono listo · bbox X ${value.x}% Y ${value.y}% W ${value.w}% H ${value.h}%`
+          : " · agregue al menos 3 puntos"}
       </p>
     </div>
   );

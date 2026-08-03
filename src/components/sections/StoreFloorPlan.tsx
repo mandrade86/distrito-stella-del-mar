@@ -21,7 +21,11 @@ import {
   LEASING_STATUSES,
 } from "@/data/stores";
 import { cn } from "@/lib/utils";
-import { hotspotShapeClass } from "@/lib/hotspot-shapes";
+import {
+  boxToPolygon,
+  isValidPolygon,
+  polygonToSvgPoints,
+} from "@/lib/hotspot-polygon";
 import { isConfigured, whatsappHref } from "@/config/contact";
 import type { SectionCopy } from "@/lib/content/page-registry";
 import { copyValue, defaultsForPage } from "@/lib/content/page-registry";
@@ -38,16 +42,25 @@ type Props = {
   whatsapp?: string;
 };
 
-function leasingClass(status: LeasingStatus | undefined, isActive: boolean) {
+function leasingSvgClass(status: LeasingStatus | undefined, isActive: boolean) {
   const base = status || "Disponible";
   if (isActive) {
-    if (base === "Reservado") return "z-10 border-gold bg-gold/40 shadow-[0_0_0_1px_rgba(197,161,90,0.55)]";
-    if (base === "Ocupado") return "z-10 border-navy bg-navy/45 shadow-[0_0_0_1px_rgba(8,47,83,0.4)]";
-    return "z-10 border-ocean bg-ocean/40 shadow-[0_0_0_1px_rgba(22,138,181,0.45)]";
+    if (base === "Reservado") return "fill-gold/45 stroke-gold";
+    if (base === "Ocupado") return "fill-navy/50 stroke-navy";
+    return "fill-ocean/45 stroke-ocean";
   }
-  if (base === "Reservado") return "border-gold/50 bg-gold/20 hover:bg-gold/30";
-  if (base === "Ocupado") return "border-navy/40 bg-navy/20 hover:bg-navy/30";
-  return "border-ocean/40 bg-ocean/15 hover:border-ocean hover:bg-ocean/25";
+  if (base === "Reservado") {
+    return "fill-gold/20 stroke-gold/55 hover:fill-gold/35";
+  }
+  if (base === "Ocupado") {
+    return "fill-navy/20 stroke-navy/45 hover:fill-navy/35";
+  }
+  return "fill-ocean/15 stroke-ocean/45 hover:fill-ocean/30";
+}
+
+function storePolygonPoints(store: Store) {
+  if (isValidPolygon(store.polygon)) return store.polygon!;
+  return boxToPolygon(store.hotspot);
 }
 
 function leasingLabel(status: LeasingStatus | undefined) {
@@ -154,7 +167,7 @@ export function StoreFloorPlan({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const showStore = (store: Store, el: HTMLElement) => {
+  const showStore = (store: Store, el: Element) => {
     setActiveId(store.id);
     const plan = planRef.current;
     if (!plan) return;
@@ -275,45 +288,54 @@ export function StoreFloorPlan({
               draggable={false}
             />
 
-            {levelStores.map((store) => {
-              const isActive = activeId === store.id;
-              const leasing = store.leasingStatus || "Disponible";
-              return (
-                <button
-                  key={store.id}
-                  type="button"
-                  data-store-id={store.id}
-                  aria-label={`${store.unitLabel ? `${store.unitLabel}. ` : ""}${displayName(store)}. ${leasing}`}
-                  aria-describedby={isActive ? tooltipId : undefined}
-                  aria-expanded={isActive}
-                  className={cn(
-                    "absolute border transition duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
-                    hotspotShapeClass(store.unitLabel),
-                    leasingClass(leasing, isActive),
-                  )}
-                  style={{
-                    left: `${store.hotspot.x}%`,
-                    top: `${store.hotspot.y}%`,
-                    width: `${store.hotspot.w}%`,
-                    height: `${store.hotspot.h}%`,
-                  }}
-                  onMouseEnter={(e) => showStore(store, e.currentTarget)}
-                  onMouseLeave={clearActive}
-                  onFocus={(e) => showStore(store, e.currentTarget)}
-                  onBlur={clearActive}
-                  onClick={(e) => {
-                    if (activeId === store.id) clearActive();
-                    else showStore(store, e.currentTarget);
-                  }}
-                >
-                  {store.unitLabel ? (
-                    <span className="pointer-events-none absolute left-0.5 top-0.5 hidden bg-navy/80 px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-white sm:inline">
-                      {store.unitLabel}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
+            <svg
+              className="absolute inset-0 h-full w-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              {levelStores.map((store) => {
+                const isActive = activeId === store.id;
+                const leasing = store.leasingStatus || "Disponible";
+                const points = storePolygonPoints(store);
+                return (
+                  <g key={store.id}>
+                    <polygon
+                      data-store-id={store.id}
+                      points={polygonToSvgPoints(points)}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`${store.unitLabel ? `${store.unitLabel}. ` : ""}${displayName(store)}. ${leasing}`}
+                      aria-describedby={isActive ? tooltipId : undefined}
+                      aria-expanded={isActive}
+                      className={cn(
+                        "cursor-pointer transition duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
+                        leasingSvgClass(leasing, isActive),
+                      )}
+                      strokeWidth={isActive ? 0.55 : 0.35}
+                      vectorEffect="non-scaling-stroke"
+                      onMouseEnter={(e) => showStore(store, e.currentTarget)}
+                      onMouseLeave={clearActive}
+                      onFocus={(e) => showStore(store, e.currentTarget)}
+                      onBlur={clearActive}
+                      onClick={(e) => {
+                        if (activeId === store.id) clearActive();
+                        else showStore(store, e.currentTarget);
+                      }}
+                    />
+                    {store.unitLabel ? (
+                      <text
+                        x={store.hotspot.x + 0.4}
+                        y={store.hotspot.y + 1.6}
+                        className="pointer-events-none hidden fill-navy/90 sm:block"
+                        style={{ fontSize: 1.55, fontWeight: 700 }}
+                      >
+                        {store.unitLabel}
+                      </text>
+                    ) : null}
+                  </g>
+                );
+              })}
+            </svg>
 
             {active && tooltipPos ? (
               <div

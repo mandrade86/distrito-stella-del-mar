@@ -13,6 +13,10 @@ import { anchorBrands as staticBrands } from "@/data/brands";
 import { masterPlanPhases as staticPhases } from "@/data/masterplan";
 import { dbAvailable, prisma } from "@/lib/db";
 import {
+  isValidPolygon,
+  parseHotspotPolygon,
+} from "@/lib/hotspot-polygon";
+import {
   defaultsForPage,
   mergePageCopy,
   type PageCopy,
@@ -374,29 +378,34 @@ export async function getStores(): Promise<Store[]> {
       orderBy: { sortOrder: "asc" },
     });
     if (!rows.length) return staticStores;
-    return rows.map((row) => ({
-      id: row.code,
-      name: row.name || "Sin asignar",
-      unitLabel: row.unitLabel || undefined,
-      phone: row.phone,
-      email: row.email || undefined,
-      website: row.website || undefined,
-      hours: row.hours,
-      category: row.category,
-      status: row.status || undefined,
-      leasingStatus: (row.leasingStatus as Store["leasingStatus"]) || "Disponible",
-      floorPlanKey: row.floorPlanKey || "n2",
-      level: row.level || undefined,
-      area: row.area ?? undefined,
-      description: row.description || undefined,
-      logo: row.logo,
-      hotspot: {
-        x: row.hotspotX,
-        y: row.hotspotY,
-        w: row.hotspotW,
-        h: row.hotspotH,
-      },
-    }));
+    return rows.map((row) => {
+      const polygon = parseHotspotPolygon(row.hotspotPolygon);
+      return {
+        id: row.code,
+        name: row.name || "Sin asignar",
+        unitLabel: row.unitLabel || undefined,
+        phone: row.phone,
+        email: row.email || undefined,
+        website: row.website || undefined,
+        hours: row.hours,
+        category: row.category,
+        status: row.status || undefined,
+        leasingStatus:
+          (row.leasingStatus as Store["leasingStatus"]) || "Disponible",
+        floorPlanKey: row.floorPlanKey || "n2",
+        level: row.level || undefined,
+        area: row.area ?? undefined,
+        description: row.description || undefined,
+        logo: row.logo,
+        hotspot: {
+          x: row.hotspotX,
+          y: row.hotspotY,
+          w: row.hotspotW,
+          h: row.hotspotH,
+        },
+        polygon: isValidPolygon(polygon) ? polygon : undefined,
+      };
+    });
   } catch {
     return staticStores;
   }

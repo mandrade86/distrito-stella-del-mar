@@ -42,6 +42,9 @@ export default function AdminEditStorePage() {
           floorPlanKey: row.floorPlanKey || "n2",
           area: row.area ?? null,
           description: row.description ?? "",
+          hotspotPolygon: Array.isArray(row.hotspotPolygon)
+            ? row.hotspotPolygon
+            : [],
         });
         setStores(
           (storesJson.data ?? []).map((r: StoreRow) => ({
@@ -49,6 +52,9 @@ export default function AdminEditStorePage() {
             leasingStatus: r.leasingStatus || "Disponible",
             floorPlanKey: r.floorPlanKey || "n2",
             area: r.area ?? null,
+            hotspotPolygon: Array.isArray(r.hotspotPolygon)
+              ? r.hotspotPolygon
+              : [],
           })),
         );
         const levelRows: FloorLevelOption[] = levelsJson.data ?? [];
