@@ -1,4 +1,8 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { ensureDatabaseUrl } from "@/lib/database-url";
+
+// Debe correr antes de new PrismaClient (Prisma lee process.env.DATABASE_URL)
+ensureDatabaseUrl();
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
@@ -49,14 +53,14 @@ export type DbStatus = {
   reason: string;
 };
 
-/** Diagnóstico de conexión MySQL (GoDaddy / cPanel). */
+/** Diagnóstico de conexión MySQL (GoDaddy / cPanel / Secrets DB_*). */
 export async function getDbStatus(): Promise<DbStatus> {
-  const url = process.env.DATABASE_URL?.trim();
-  if (!url) {
+  const resolved = ensureDatabaseUrl();
+  if (!resolved.url) {
     return {
       ok: false,
       reason:
-        "Falta DATABASE_URL. En GoDaddy cPanel → Setup Node.js App → Environment Variables, o cree un archivo .env en la raíz del proyecto.",
+        "Falta conexión MySQL. Adjunte la base en el hosting (Secrets DB_HOST/DB_USER/…) o defina DATABASE_URL.",
     };
   }
 
@@ -76,7 +80,7 @@ export async function getDbStatus(): Promise<DbStatus> {
       return {
         ok: false,
         reason:
-          "MySQL rechazó usuario/contraseña. Revise DATABASE_URL (en cPanel el usuario suele ser cuenta_usuario).",
+          "MySQL rechazó usuario/contraseña. Revise DB_USER/DB_PASSWORD (o DATABASE_URL).",
       };
     }
     if (
@@ -87,7 +91,7 @@ export async function getDbStatus(): Promise<DbStatus> {
       return {
         ok: false,
         reason:
-          "La base de datos no existe. Créela en cPanel → MySQL Databases y asigne el usuario.",
+          "La base de datos no existe. Revise DB_NAME o créela en el panel de hosting.",
       };
     }
     if (
@@ -98,19 +102,10 @@ export async function getDbStatus(): Promise<DbStatus> {
       lower.includes("connect e") ||
       (lower.includes("connect") && !lower.includes("access denied"))
     ) {
-      let hostHint = "";
-      try {
-        const host = new URL(url).hostname;
-        if (host && host !== "127.0.0.1" && host !== "localhost") {
-          hostHint = ` Ahora apunta a "${host}". Cámbielo a 127.0.0.1.`;
-        }
-      } catch {
-        /* ignore */
-      }
+      const host = resolved.host || "(desconocido)";
       return {
         ok: false,
-        reason:
-          `No se puede conectar al host MySQL. En cPanel use host 127.0.0.1 o localhost (no la IP pública).${hostHint}`,
+        reason: `No se puede conectar al host MySQL "${host}". Use el DB_HOST que inyecta el hosting (Secrets), no la IP pública.`,
       };
     }
     if (lower.includes("p2021") || lower.includes("does not exist")) {

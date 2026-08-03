@@ -41,30 +41,35 @@ Campos críticos:
 
 Los `NEXT_PUBLIC_*` se “hornean” en el **build**. Si cambias URL o env, vuelve a hacer `npm run build`.
 
-### `DATABASE_URL` en GoDaddy cPanel
+### `DATABASE_URL` / Secrets de MySQL
+
+**Si el hosting adjunta la base (Secrets card)** verá `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`.  
+La app las lee sola y arma la conexión Prisma — **no hace falta** poner `DATABASE_URL` a mano con `localhost`.
+
+**Si usa cPanel MySQL clásico** (sin Secrets DB_*):
 
 1. cPanel → **MySQL Databases**: cree BD + usuario y asigne **ALL PRIVILEGES**.
-2. Formato típico:
+2. Formato:
 
 ```env
 DATABASE_URL="mysql://USUARIO:PASSWORD@127.0.0.1:3306/NOMBRE_BD"
 ```
 
-Notas cPanel:
+Notas:
 
-- El usuario suele verse como `cuenta_usuario` (con guion bajo).
-- El host casi siempre es `127.0.0.1` o `localhost` (no use la IP pública del sitio).
+- Prefiera `127.0.0.1` sobre `localhost` (evita fallos IPv6).
+- El usuario suele verse como `cuenta_usuario`.
 - Si el password tiene `@ # % &` etc., **encodeéelo en URL** (ej. `@` → `%40`).
-- En **Setup Node.js App → Environment Variables** agregue también `DATABASE_URL` (a veces el `.env` no se carga solo).
-- Tras crear la BD, en la terminal de la app:
+- En **Setup Node.js App → Environment Variables** agregue las variables que use.
+- Tras crear la BD:
 
 ```bash
 npx prisma db push
 npx tsx prisma/seed.ts
 ```
 
-3. Prueba: abra `https://su-dominio/api/health`  
-   Debe devolver `"database":"connected"`. Si no, el campo `detail` indica la causa.
+3. Prueba: `https://su-dominio/api/health` → `"database":"connected"`.  
+   El campo `dbSource` indica si usó `DB_*` o `DATABASE_URL`.
 
 ---
 

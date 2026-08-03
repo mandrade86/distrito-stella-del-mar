@@ -28,6 +28,18 @@ function loadEnvFile() {
 
 loadEnvFile();
 
+// Hosting Secrets (DB_*) → DATABASE_URL para Prisma
+{
+  const host = process.env.DB_HOST?.trim();
+  const user = process.env.DB_USER?.trim();
+  const database = process.env.DB_NAME?.trim();
+  if (host && user && database) {
+    const password = process.env.DB_PASSWORD ?? "";
+    const port = process.env.DB_PORT?.trim() || "3306";
+    process.env.DATABASE_URL = `mysql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${encodeURIComponent(database)}`;
+  }
+}
+
 const prisma = new PrismaClient();
 
 function sqlLiteral(value: unknown): string {
