@@ -95,12 +95,22 @@ export async function getDbStatus(): Promise<DbStatus> {
       lower.includes("enotfound") ||
       lower.includes("can't reach") ||
       lower.includes("p1001") ||
-      lower.includes("connect")
+      lower.includes("connect e") ||
+      (lower.includes("connect") && !lower.includes("access denied"))
     ) {
+      let hostHint = "";
+      try {
+        const host = new URL(url).hostname;
+        if (host && host !== "127.0.0.1" && host !== "localhost") {
+          hostHint = ` Ahora apunta a "${host}". Cámbielo a 127.0.0.1.`;
+        }
+      } catch {
+        /* ignore */
+      }
       return {
         ok: false,
         reason:
-          "No se puede conectar al host MySQL. En cPanel use host 127.0.0.1 o localhost (no la IP pública).",
+          `No se puede conectar al host MySQL. En cPanel use host 127.0.0.1 o localhost (no la IP pública).${hostHint}`,
       };
     }
     if (lower.includes("p2021") || lower.includes("does not exist")) {
