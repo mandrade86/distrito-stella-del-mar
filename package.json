@@ -7,7 +7,7 @@
     "build": "prisma generate && node --max-old-space-size=3072 ./node_modules/next/dist/bin/next build && node scripts/copy-standalone-public.mjs",
     "build:godaddy": "npm run build",
     "postbuild:public": "node scripts/copy-standalone-public.mjs",
-    "start": "prisma db push --skip-generate && next start -H 0.0.0.0",
+    "start": "node scripts/start-prod.cjs",
     "start:standalone": "node .next/standalone/server.js",
     "lint": "eslint",
     "postinstall": "prisma generate",
