@@ -171,6 +171,20 @@ async function main() {
   console.log(`OK: ${latest}`);
   console.log(`Tamaño: ${(Buffer.byteLength(body) / 1024).toFixed(1)} KB`);
   console.log(`Tablas: ${tableNames.length}`);
+
+  // Aviso: el SQL no incluye archivos de public/uploads
+  const uploadRefs = body.match(/\/uploads\/[A-Za-z0-9._-]+/g) || [];
+  const uniqueUploads = [...new Set(uploadRefs)];
+  if (uniqueUploads.length) {
+    console.log("");
+    console.log(
+      `AVISO: el dump referencia ${uniqueUploads.length} archivo(s) en /uploads/.`,
+    );
+    console.log(
+      "El SQL NO copia esos archivos. En el servidor suba public/uploads/",
+    );
+    console.log("  npm run db:pack-uploads  →  dumps/distrito-uploads-latest.zip");
+  }
 }
 
 main()

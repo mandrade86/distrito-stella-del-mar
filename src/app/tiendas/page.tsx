@@ -12,6 +12,9 @@ import {
 } from "@/lib/content";
 import { resolvePageHero } from "@/lib/content/page-hero";
 
+/** Siempre leer CMS en runtime (cambios de BD / planos sin rebuild). */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Tiendas | Distrito Stella del Mar",
   description:

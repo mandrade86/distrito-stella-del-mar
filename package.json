@@ -17,6 +17,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-floors": "tsx scripts/seed-floor-units.ts",
     "db:studio": "prisma studio",
+    "db:dump": "tsx scripts/export-sql-dump.ts",
+    "db:pack-uploads": "tsx scripts/pack-uploads.ts",
     "deploy:prepare": "npm ci && npm run db:push && npm run build",
     "deploy:copy-public": "node scripts/copy-standalone-public.mjs"
   },
