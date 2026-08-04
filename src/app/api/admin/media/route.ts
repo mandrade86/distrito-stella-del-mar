@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { unauthorized } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/auth/admin";
 import { prisma } from "@/lib/db";
+import { listBlobCmsUrls } from "@/lib/media-storage";
 
 const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
@@ -39,16 +40,27 @@ export async function GET() {
   }
 
   const publicRoot = path.join(process.cwd(), "public");
-  const [fromImages, fromUploads, galleryRows] = await Promise.all([
-    listImages(path.join(publicRoot, "images"), "/images"),
-    listImages(path.join(publicRoot, "uploads"), "/uploads"),
-    prisma.galleryItem
-      .findMany({ select: { src: true }, orderBy: { sortOrder: "asc" } })
-      .catch(() => [] as { src: string }[]),
-  ]);
+  const [fromImages, fromUploads, fromBlob, mediaRows, galleryRows] =
+    await Promise.all([
+      listImages(path.join(publicRoot, "images"), "/images"),
+      listImages(path.join(publicRoot, "uploads"), "/uploads"),
+      listBlobCmsUrls(),
+      prisma.mediaAsset
+        .findMany({
+          select: { url: true },
+          orderBy: { createdAt: "desc" },
+          take: 500,
+        })
+        .catch(() => [] as { url: string }[]),
+      prisma.galleryItem
+        .findMany({ select: { src: true }, orderBy: { sortOrder: "asc" } })
+        .catch(() => [] as { src: string }[]),
+    ]);
 
   const urls = [
     ...new Set([
+      ...fromBlob,
+      ...mediaRows.map((m) => m.url),
       ...fromUploads,
       ...fromImages,
       ...galleryRows.map((g) => g.src).filter(Boolean),

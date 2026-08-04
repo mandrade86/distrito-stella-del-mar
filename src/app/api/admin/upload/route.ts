@@ -1,25 +1,13 @@
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { unauthorized } from "@/lib/admin-api";
 import { requireAdmin } from "@/lib/auth/admin";
-
-const ALLOWED = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-]);
-const MAX_BYTES = 8 * 1024 * 1024;
-
-function sanitizeName(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80);
-}
+import { prisma } from "@/lib/db";
+import {
+  buildUploadFilename,
+  isAllowedImageType,
+  MAX_UPLOAD_BYTES,
+  storeCmsImage,
+} from "@/lib/media-storage";
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,56 +27,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!ALLOWED.has(file.type)) {
+    if (!isAllowedImageType(file.type)) {
       return NextResponse.json(
         { ok: false, error: "Formato no permitido (jpg, png, webp, gif)" },
         { status: 400 },
       );
     }
 
-    if (file.size > MAX_BYTES) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
         { ok: false, error: "La imagen supera 8 MB" },
         { status: 400 },
       );
     }
 
-    const ext =
-      path.extname(file.name).toLowerCase() ||
-      (file.type === "image/png"
-        ? ".png"
-        : file.type === "image/webp"
-          ? ".webp"
-          : file.type === "image/gif"
-            ? ".gif"
-            : ".jpg");
-
-    const base = sanitizeName(path.basename(file.name, path.extname(file.name))) || "image";
-    const filename = `${Date.now()}-${base}${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
-
+    const filename = buildUploadFilename(file.name, file.type);
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path.join(uploadDir, filename), buffer);
+    const stored = await storeCmsImage({
+      bytes: buffer,
+      filename,
+      contentType: file.type,
+    });
 
-    const url = `/uploads/${filename}`;
-    return NextResponse.json({ ok: true, data: { url, filename } });
+    // Registro en BD para la biblioteca de medios (sobrevive aploys Git)
+    try {
+      await prisma.mediaAsset.create({
+        data: {
+          url: stored.url,
+          filename: stored.filename,
+          driver: stored.driver,
+        },
+      });
+    } catch (dbError) {
+      console.error("[admin/upload] mediaAsset", dbError);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      data: {
+        url: stored.url,
+        filename: stored.filename,
+        driver: stored.driver,
+      },
+    });
   } catch (error) {
     console.error("[admin/upload]", error);
-    const msg = error instanceof Error ? error.message : String(error);
-    const readOnly =
-      /erofs|eacces|read-only|permission denied|eperm/i.test(msg) ||
-      (error as NodeJS.ErrnoException)?.code === "EROFS" ||
-      (error as NodeJS.ErrnoException)?.code === "EACCES" ||
-      (error as NodeJS.ErrnoException)?.code === "EPERM";
-    return NextResponse.json(
-      {
-        ok: false,
-        error: readOnly
-          ? "El disco de la app es de solo lectura (Git-connected). Ponga las imágenes en public/images/ y súbalas por Git, o desconecte Git para poder usar /uploads."
-          : "No se pudo subir la imagen",
-      },
-      { status: 500 },
-    );
+    const message =
+      error instanceof Error ? error.message : "No se pudo subir la imagen";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

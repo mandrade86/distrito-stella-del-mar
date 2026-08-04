@@ -192,6 +192,17 @@ model GalleryItem {
   @@index([sortOrder])
 }
 
+/// Imágenes subidas por el CMS (local /uploads o URL de Blob).
+model MediaAsset {
+  id        String   @id @default(cuid())
+  url       String   @unique
+  filename  String   @default("")
+  driver    String   @default("local") // local | blob
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model Brand {
   id        String   @id @default(cuid())
   name      String

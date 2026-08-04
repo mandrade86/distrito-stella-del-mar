@@ -147,6 +147,25 @@ o script npm: `start` → `next start -H 0.0.0.0` (cPanel inyecta `PORT`).
 
 7. Reiniciar la aplicación Node en cPanel.
 
+### Imágenes del CMS (cambian en cualquier momento)
+
+En GoDaddy con **Git-connected** el File Manager es de solo lectura: `public/uploads/` **no sirve** para el CMS.
+
+**Solución: Vercel Blob** (la app puede seguir en GoDaddy; solo usa el storage):
+
+1. En [vercel.com/dashboard](https://vercel.com/dashboard) → **Storage** → cree un **Blob** store.
+2. Copie el token `BLOB_READ_WRITE_TOKEN`.
+3. En GoDaddy → Secrets / Environment Variables de la app Node, agregue:
+   ```
+   BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
+   ```
+4. Redeploy / reinicie la app.
+5. En **Admin** suba planos, logos, etc. como siempre → se guardan en la nube y la URL queda en MySQL.
+
+Sin ese token, en hosting de solo lectura el CMS mostrará un error pidiendo configurarlo.
+
+(Localmente, sin el token, sigue usando `public/uploads/`.)
+
 ### Sitio en vivo (preview privado)
 
 En **Admin → Ajustes** hay un interruptor **Sitio en vivo**:
@@ -155,19 +174,6 @@ En **Admin → Ajustes** hay un interruptor **Sitio en vivo**:
 - Encendido: sitio abierto a todos.
 
 Opcional en env: `SITE_LIVE=true|false` fuerza el modo (prioridad sobre el toggle).
-
-### Imágenes del CMS con Git-connected (GoDaddy Airo)
-
-Si el File Manager dice **“Read only - Git-connected”**:
-
-- **No** podrá subir archivos a `public/uploads/` por File Manager.
-- Los uploads del Admin a `/uploads/...` **se pierden** en cada deploy o fallan en disco de solo lectura.
-- **Use `public/images/...`** (va en el repo) para planos, heroes y logos importantes:
-  1. Ponga el archivo en `public/images/...` en su PC
-  2. `git add` + `git commit` + `git push`
-  3. Redeploy / rebuild en GoDaddy
-  4. En Admin, apunte `planImage` / logo a esa ruta `/images/...`
-- SQL de ejemplo: `dumps/fix-floorplan-images-git.sql`
 
 Repetir el mismo proceso en el **otro** dominio/subdominio con su propio `.env` y su propia BD.
 
