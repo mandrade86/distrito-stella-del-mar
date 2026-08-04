@@ -23,7 +23,9 @@ En la configuración de la app (Git deploy):
 | **Build** | `npm run build` |
 | **Start** | `npm start` |
 
-**No uses** `NODE_ENV=production npm run build`. Ese prefijo hace que fallen installs/builds (se saltan dependencias de compilación).
+**No uses** `NODE_ENV=production npm run build` si el panel te deja editarlo: pon solo `npm run build`.
+
+Si el panel **obliga** `NODE_ENV=production npm run build`, el repo ya incluye `.npmrc` (`production=false`) y las deps de build (Tailwind, TypeScript, Prisma) en `dependencies`, para que igual instale todo lo necesario.
 
 Secrets: `BLOB_READ_WRITE_TOKEN`, `DB_*` **o** `DATABASE_URL`, `ADMIN_SESSION_SECRET`, etc. Luego **Redeploy**.
 
