@@ -79,6 +79,13 @@ export async function storeCmsImage(opts: {
     return { url: blob.url, filename, driver: "blob" };
   }
 
+  // En producción (GoDaddy Git) el disco no sirve: no devolver /uploads/ que luego dan 404
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Falta BLOB_READ_WRITE_TOKEN. En GoDaddy → Secrets agregue el token de Vercel Blob, reinicie/redeploy, y vuelva a subir la imagen. No use /uploads/ en este hosting.",
+    );
+  }
+
   try {
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadDir, { recursive: true });
