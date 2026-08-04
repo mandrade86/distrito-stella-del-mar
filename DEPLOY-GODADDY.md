@@ -13,6 +13,20 @@ En GoDaddy usar una de estas opciones:
 
 **Bases de datos distintas** para cada sitio. Nunca compartir `DATABASE_URL`.
 
+### Panel GoDaddy sin terminal (Build / Start)
+
+En la configuración de la app (Git deploy):
+
+| Campo | Poner exactamente |
+|-------|-------------------|
+| **Install** | `npm ci` o `npm install` |
+| **Build** | `npm run build` |
+| **Start** | `npm start` |
+
+**No uses** `NODE_ENV=production npm run build`. Ese prefijo hace que fallen installs/builds (se saltan dependencias de compilación).
+
+Secrets: `BLOB_READ_WRITE_TOKEN`, `DB_*` o `DATABASE_URL`, `ADMIN_SESSION_SECRET`, etc. Luego **Redeploy**.
+
 ---
 
 ## 1. Preparar variables
