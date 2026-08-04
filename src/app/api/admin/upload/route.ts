@@ -75,8 +75,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, data: { url, filename } });
   } catch (error) {
     console.error("[admin/upload]", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    const readOnly =
+      /erofs|eacces|read-only|permission denied|eperm/i.test(msg) ||
+      (error as NodeJS.ErrnoException)?.code === "EROFS" ||
+      (error as NodeJS.ErrnoException)?.code === "EACCES" ||
+      (error as NodeJS.ErrnoException)?.code === "EPERM";
     return NextResponse.json(
-      { ok: false, error: "No se pudo subir la imagen" },
+      {
+        ok: false,
+        error: readOnly
+          ? "El disco de la app es de solo lectura (Git-connected). Ponga las imágenes en public/images/ y súbalas por Git, o desconecte Git para poder usar /uploads."
+          : "No se pudo subir la imagen",
+      },
       { status: 500 },
     );
   }

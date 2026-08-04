@@ -156,6 +156,19 @@ En **Admin → Ajustes** hay un interruptor **Sitio en vivo**:
 
 Opcional en env: `SITE_LIVE=true|false` fuerza el modo (prioridad sobre el toggle).
 
+### Imágenes del CMS con Git-connected (GoDaddy Airo)
+
+Si el File Manager dice **“Read only - Git-connected”**:
+
+- **No** podrá subir archivos a `public/uploads/` por File Manager.
+- Los uploads del Admin a `/uploads/...` **se pierden** en cada deploy o fallan en disco de solo lectura.
+- **Use `public/images/...`** (va en el repo) para planos, heroes y logos importantes:
+  1. Ponga el archivo en `public/images/...` en su PC
+  2. `git add` + `git commit` + `git push`
+  3. Redeploy / rebuild en GoDaddy
+  4. En Admin, apunte `planImage` / logo a esa ruta `/images/...`
+- SQL de ejemplo: `dumps/fix-floorplan-images-git.sql`
+
 Repetir el mismo proceso en el **otro** dominio/subdominio con su propio `.env` y su propia BD.
 
 ### PM2 (si tienes SSH)
