@@ -25,7 +25,9 @@ En la configuración de la app (Git deploy):
 
 **No uses** `NODE_ENV=production npm run build`. Ese prefijo hace que fallen installs/builds (se saltan dependencias de compilación).
 
-Secrets: `BLOB_READ_WRITE_TOKEN`, `DB_*` o `DATABASE_URL`, `ADMIN_SESSION_SECRET`, etc. Luego **Redeploy**.
+Secrets: `BLOB_READ_WRITE_TOKEN`, `DB_*` **o** `DATABASE_URL`, `ADMIN_SESSION_SECRET`, etc. Luego **Redeploy**.
+
+Con `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME`, `npm start` arma `DATABASE_URL` solo para Prisma (no hace falta duplicarla). Si el panel insiste, también puedes poner `DATABASE_URL` a mano.
 
 ---
 
