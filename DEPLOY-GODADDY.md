@@ -21,9 +21,9 @@ En la configuración de la app (Git deploy):
 |-------|-------------------|
 | **Install** | `npm ci` o `npm install` |
 | **Build** | `npm run build` |
-| **Start** | `npm start` |
+| **Start** | `npm start` o `next start -H 0.0.0.0` (GoDaddy a menudo fuerza esto) |
 
-`npm start` usa **standalone** (`node .next/standalone/server.js`) cuando el build generó esa carpeta. No uses solo `next start` con `output: "standalone"`.
+El proyecto **ya no usa** `output: "standalone"`, para que `next start` del panel de GoDaddy funcione sin el warning.
 
 **No uses** `NODE_ENV=production npm run build` si el panel te deja editarlo: pon solo `npm run build`.
 
