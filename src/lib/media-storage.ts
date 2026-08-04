@@ -16,7 +16,16 @@ export function isAllowedImageType(type: string) {
 }
 
 export function blobConfigured() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+  return Boolean(blobToken());
+}
+
+/** Token de Vercel Blob (nombre estándar o alias). */
+export function blobToken() {
+  return (
+    process.env.BLOB_READ_WRITE_TOKEN?.trim() ||
+    process.env.VERCEL_BLOB_READ_WRITE_TOKEN?.trim() ||
+    ""
+  );
 }
 
 function sanitizeName(name: string) {
@@ -73,7 +82,7 @@ export async function storeCmsImage(opts: {
     const blob = await put(`cms/${filename}`, bytes, {
       access: "public",
       contentType,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
+      token: blobToken(),
       addRandomSuffix: false,
     });
     return { url: blob.url, filename, driver: "blob" };
@@ -111,7 +120,7 @@ export async function listBlobCmsUrls(): Promise<string[]> {
       const page = await list({
         prefix: "cms/",
         cursor,
-        token: process.env.BLOB_READ_WRITE_TOKEN,
+        token: blobToken(),
       });
       for (const b of page.blobs) {
         if (b.url) urls.push(b.url);

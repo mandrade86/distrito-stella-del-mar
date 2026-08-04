@@ -31,6 +31,7 @@ export default function AdminFloorPlansPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [blobOk, setBlobOk] = useState<boolean | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,6 +53,18 @@ export default function AdminFloorPlansPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/health");
+        const json = await res.json();
+        setBlobOk(Boolean(json.blobStorage));
+      } catch {
+        setBlobOk(null);
+      }
+    })();
+  }, []);
 
   function startCreate() {
     setForm(blank());
@@ -176,6 +189,19 @@ export default function AdminFloorPlansPage() {
           </button>
         </div>
       </div>
+
+      {blobOk === false ? (
+        <div className="border border-amber-500/40 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <strong>Blob no configurado.</strong> Las subidas no funcionarán en
+          este hosting. En GoDaddy → Secrets agregue{" "}
+          <code className="text-xs">BLOB_READ_WRITE_TOKEN</code> (Vercel Blob) y
+          haga Redeploy. Compruebe{" "}
+          <a href="/api/health" className="underline" target="_blank" rel="noreferrer">
+            /api/health
+          </a>{" "}
+          → <code className="text-xs">blobStorage: true</code>.
+        </div>
+      ) : null}
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       {message ? <p className="text-sm text-ocean">{message}</p> : null}
