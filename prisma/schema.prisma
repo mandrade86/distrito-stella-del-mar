@@ -225,7 +225,8 @@ model MasterPlanPhase {
   description String   @db.Text
   image       String
   imageAlt    String
-  gallery     String   @default("[]") @db.LongText
+  /// JSON en texto (sin @default: MySQL no admite DEFAULT en LONGTEXT)
+  gallery     String   @db.LongText
   highlights  String   @db.LongText
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
