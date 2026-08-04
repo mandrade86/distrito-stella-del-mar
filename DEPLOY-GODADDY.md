@@ -23,6 +23,8 @@ En la configuración de la app (Git deploy):
 | **Build** | `npm run build` |
 | **Start** | `npm start` |
 
+`npm start` usa **standalone** (`node .next/standalone/server.js`) cuando el build generó esa carpeta. No uses solo `next start` con `output: "standalone"`.
+
 **No uses** `NODE_ENV=production npm run build` si el panel te deja editarlo: pon solo `npm run build`.
 
 Si el panel **obliga** `NODE_ENV=production npm run build`, el repo ya incluye `.npmrc` (`production=false`) y las deps de build (Tailwind, TypeScript, Prisma) en `dependencies`, para que igual instale todo lo necesario.
