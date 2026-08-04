@@ -1,11 +1,19 @@
 import { NextRequest } from "next/server";
 import { withAdmin } from "@/lib/admin-api";
 import { prisma } from "@/lib/db";
+import { fromJsonText, toJsonText } from "@/lib/json-text";
 
 export async function GET() {
-  return withAdmin(async () =>
-    prisma.masterPlanPhase.findMany({ orderBy: { sortOrder: "asc" } }),
-  );
+  return withAdmin(async () => {
+    const rows = await prisma.masterPlanPhase.findMany({
+      orderBy: { sortOrder: "asc" },
+    });
+    return rows.map((row) => ({
+      ...row,
+      gallery: fromJsonText<string[]>(row.gallery, []),
+      highlights: fromJsonText<string[]>(row.highlights, []),
+    }));
+  });
 }
 
 function parseLines(value: unknown): string[] {
@@ -30,8 +38,8 @@ export async function POST(request: NextRequest) {
         description: String(body.description ?? ""),
         image: String(body.image ?? ""),
         imageAlt: String(body.imageAlt ?? ""),
-        gallery,
-        highlights,
+        gallery: toJsonText(gallery),
+        highlights: toJsonText(highlights),
         sortOrder: Number(body.sortOrder ?? 0),
       },
     }),
@@ -53,8 +61,8 @@ export async function PUT(request: NextRequest) {
         description: String(body.description ?? ""),
         image: String(body.image ?? ""),
         imageAlt: String(body.imageAlt ?? ""),
-        gallery,
-        highlights,
+        gallery: toJsonText(gallery),
+        highlights: toJsonText(highlights),
         sortOrder: Number(body.sortOrder ?? 0),
       },
     }),

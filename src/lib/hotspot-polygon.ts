@@ -3,6 +3,13 @@ export type HotspotPoint = { x: number; y: number };
 export type HotspotBox = { x: number; y: number; w: number; h: number };
 
 export function parseHotspotPolygon(raw: unknown): HotspotPoint[] {
+  if (typeof raw === "string") {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
   if (!Array.isArray(raw)) return [];
   const points: HotspotPoint[] = [];
   for (const item of raw) {

@@ -142,8 +142,8 @@ async function main() {
         description: phase.description,
         image: phase.image,
         imageAlt: phase.imageAlt,
-        gallery: phase.gallery,
-        highlights: phase.highlights,
+        gallery: JSON.stringify(phase.gallery),
+        highlights: JSON.stringify(phase.highlights),
         sortOrder: index,
       },
     });

@@ -16,6 +16,7 @@ import {
   isValidPolygon,
   parseHotspotPolygon,
 } from "@/lib/hotspot-polygon";
+import { fromJsonText } from "@/lib/json-text";
 import {
   defaultsForPage,
   mergePageCopy,
@@ -379,7 +380,9 @@ export async function getStores(): Promise<Store[]> {
     });
     if (!rows.length) return staticStores;
     return rows.map((row) => {
-      const polygon = parseHotspotPolygon(row.hotspotPolygon);
+      const polygon = parseHotspotPolygon(
+        fromJsonText(row.hotspotPolygon, []),
+      );
       return {
         id: row.code,
         name: row.name || "Sin asignar",
@@ -473,9 +476,8 @@ export async function getMasterPlanPhases(): Promise<MasterPlanPhase[]> {
   });
   if (!rows.length) return staticPhases;
   return rows.map((row) => {
-    const gallery = Array.isArray(row.gallery)
-      ? (row.gallery as unknown[]).map(String).filter(Boolean)
-      : [];
+    const gallery = fromJsonText<string[]>(row.gallery, []);
+    const highlights = fromJsonText<string[]>(row.highlights, []);
     return {
       id: row.tabId as MasterPlanPhase["id"],
       label: row.label,
@@ -484,9 +486,7 @@ export async function getMasterPlanPhases(): Promise<MasterPlanPhase[]> {
       image: row.image,
       imageAlt: row.imageAlt,
       gallery: gallery.length ? gallery : [row.image].filter(Boolean),
-      highlights: Array.isArray(row.highlights)
-        ? (row.highlights as string[])
-        : [],
+      highlights,
     };
   });
 }

@@ -60,12 +60,5 @@ const nextBin = path.join(
   process.platform === "win32" ? "next.cmd" : "next",
 );
 
-run(prismaBin, [
-  "db",
-  "push",
-  "--skip-generate",
-  // GoDaddy importó JSON como longtext; el schema usa Json.
-  // El cast longtext→json no pierde el contenido JSON, pero Prisma pide el flag.
-  "--accept-data-loss",
-]);
+run(prismaBin, ["db", "push", "--skip-generate"]);
 run(nextBin, ["start", "-H", "0.0.0.0"]);

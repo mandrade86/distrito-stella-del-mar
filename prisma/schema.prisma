@@ -148,8 +148,8 @@ model Store {
   hotspotY    Float
   hotspotW    Float
   hotspotH    Float
-  /// Polígono en % del plano: [{x,y}, ...] — si tiene 3+ puntos, tiene prioridad sobre el rectángulo
-  hotspotPolygon Json?
+  /// Polígono en % del plano: JSON texto [{x,y}, ...] (longtext = compatible GoDaddy)
+  hotspotPolygon String? @db.LongText
   sortOrder   Int      @default(0)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -225,8 +225,8 @@ model MasterPlanPhase {
   description String   @db.Text
   image       String
   imageAlt    String
-  gallery     Json     @default("[]")
-  highlights  Json
+  gallery     String   @default("[]") @db.LongText
+  highlights  String   @db.LongText
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
